@@ -11,7 +11,7 @@ lnf() {
 }
 
 lnfb() {
-	print -P '%B%F{yellow}[[['
+	print -P '%B%F{yellow}[[[%f%b'
 }
 
 lnfbe() {
@@ -72,11 +72,11 @@ install_i3() {
 	lnh "Installing General Tools"
 	mkdir -p ~/Documents/tools
 	# Wallpaper Tool
-	lnfb
-	cp -v config/i3/tools/wallpaper.sh ~/Documents/tools/
-	lnfbe
 	lnf
+	cp -v config/i3/tools/wallpaper.sh ~/Documents/tools/
+	lnfb
 	cp -v config/wallpapers/wallpaper* ~/Pictures/
+	lnfbe
 
 	### Install Service Files
 	lnh "Installing Services"
