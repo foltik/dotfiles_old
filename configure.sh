@@ -60,30 +60,30 @@ install_i3() {
 	lnh  "Installing General Configuration Files"
 	# i3
 	lnf
-	cp -v config/i3/laptop/config ~/.config/i3/config
+	cp -v cfg/i3/laptop/config ~/.config/i3/config
 	# Compton
 	lnf
-	cp -v config/compton/config ~/.config/compton/config
+	cp -v cfg/compton/config ~/.config/compton/config
 	# NCMPCPP config
 	lnf
-	cp -v config/termite/ncmpcpp_config ~/.config/termite/ncmpcpp_config
+	cp -v cfg/termite/ncmpcpp_config ~/.config/termite/ncmpcpp_config
 
 	### Install Tools
 	lnh "Installing General Tools"
 	mkdir -p ~/Documents/tools
 	# Wallpaper Tool
 	lnf
-	cp -v config/i3/tools/wallpaper.sh ~/Documents/tools/
+	cp -v cfg/i3/tools/wallpaper.sh ~/Documents/tools/
 	lnfb
-	cp -v config/wallpapers/wallpaper* ~/Pictures/
+	cp -v cfg/wallpapers/wallpaper* ~/Pictures/
 	lnfbe
 
 	### Install Service Files
 	lnh "Installing Services"
 	lnf
-	sudo cp -v config/systemd/system/suspend@.service /etc/systemd/system/
+	sudo cp -v cfg/systemd/system/suspend@.service /etc/systemd/system/
 	lnf
-	sudo cp -v config/systemd/user/locker.service /etc/systemd/user
+	sudo cp -v cfg/systemd/user/locker.service /etc/systemd/user
 	sudo systemctl daemon-reload
 	lnh "Enabling Services"
 	lnf
