@@ -11,10 +11,12 @@ lnf() {
 }
 
 lnfb() {
-	print -P '%B%F{blue}>>> [['
-	
+	print -P '%B%F{yellow}[[['
+}
+
 lnfbe() {
-	print -P '%B%F{blue}<<<
+	print -P '%B%F{yellow}]]]'
+}
 
 ln() {
 	Print -Pn '%B%F{yellow}>>> '
@@ -70,8 +72,9 @@ install_i3() {
 	lnh "Installing General Tools"
 	mkdir -p ~/Documents/tools
 	# Wallpaper Tool
-	lnf
+	lnfb
 	cp -v config/i3/tools/wallpaper.sh ~/Documents/tools/
+	lnfbe
 	lnf
 	cp -v config/wallpapers/wallpaper* ~/Pictures/
 
@@ -88,7 +91,7 @@ install_i3() {
 	lnf
 	systemctl --user enable locker.service
 
-	echo "Select a Platform"
+	lnh "Select a Platform"
 	platform_opt=("Desktop" "Laptop")
 	select opt in "${platform_opt[@]}"
 	do
@@ -97,6 +100,7 @@ install_i3() {
 				break
 				;;
 			"Laptop")
+				lnh "Installing i3"
 				install_i3_laptop
 				break
 				;;
@@ -118,7 +122,6 @@ do
 			break
 			;;
 		"i3")
-			echo "i3"
 			install_i3
 			break
 			;;
