@@ -1,0 +1,102 @@
+# i3blocks config file
+#
+# Please see man i3blocks for a complete reference!
+# The man page is also hosted at http://vivien.github.io/i3blocks
+#
+# List of valid properties:
+#
+# align
+# color
+# background
+# border
+# command
+# full_text
+# instance
+# interval
+# label
+# min_width
+# name
+# separator
+# separator_block_width
+# short_text
+# signal
+# urgent
+
+# Global properties
+#
+# The top properties below are applied to every block, but can be overridden.
+# Each block command defaults to the script name to avoid boilerplate.
+command=~/.config/i3blocks/blocks/$BLOCK_NAME
+separator_block_width=15
+markup=none
+
+# Volume indicator
+#
+# The first parameter sets the step (and units to display)
+# The second parameter overrides the mixer selection
+# See the script for details.
+[audio]
+label=
+interval=1
+
+# Memory usage
+#
+# The type defaults to "mem" if the instance is not specified.
+[memory]
+label=
+instance=mem;used
+interval=30
+
+# Disk usage
+#
+# The directory defaults to $HOME if the instance is not specified.
+# The script may be called with a optional argument to set the alert
+# (defaults to 10 for 10%).
+[disk]
+label=
+#instance=$HOME
+interval=10
+
+# Network Usage
+#[bandwidth]
+#separator=false
+#instance=wlp4s0;in
+#label=
+#interval=5
+#
+#[bandwidth]
+#instance=wlp4s0;out
+#label=
+#interval=5
+
+[tab]
+
+[cpu]
+label=
+interval=1
+separator=false
+
+[temperature]
+instance=Core
+label=
+interval=5
+
+# Battery indicator
+#
+# The battery instance defaults to 0.
+[battery]
+separator=false
+label= 1:
+instance=0
+interval=5
+
+[battery]
+label=2:
+instance=1;rem
+interval=5
+
+# Date Time
+#
+[time]
+command=date '+%F %I:%M:%S'
+interval=1

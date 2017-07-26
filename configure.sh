@@ -58,9 +58,6 @@ install_i3() {
 
 	### Configuration Files
 	lnh  "Installing General Configuration Files"
-	# i3
-	lnf
-	cp -v config/i3/laptop/config ~/.config/i3/config
 	# Compton
 	lnf
 	cp -v config/compton/config ~/.config/compton/config
@@ -80,8 +77,10 @@ install_i3() {
 
 	### Install Service Files
 	lnh "Installing Services"
+	# Suspend locker
 	lnf
 	sudo cp -v config/systemd/system/suspend@.service /etc/systemd/system/
+	# Auto locker
 	lnf
 	sudo cp -v config/systemd/user/locker.service /etc/systemd/user
 	sudo systemctl daemon-reload
@@ -110,6 +109,16 @@ install_i3() {
 }
 
 install_i3_laptop() {
+	lnh "Installing Laptop Configuration Files"
+	# i3blocks
+	lnf
+	cp -v config/i3blocks/laptop/config ~/.config/i3blocks/config
+	lnf
+	mkdir ~/.config/i3blocks/blocks
+	lnfb
+	cp -v config/i3blocks/laptop/config/blocks/* ~/.config/i3blocks/blocks/
+	lnfbe
+	
 }
 
 echo "Select a Window Manager"
