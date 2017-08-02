@@ -84,7 +84,8 @@ install_i3() {
 
 	### Install Tools
 	lnh "Installing General Tools"
-	mkdir -p ~/Documents/tools
+	lnf
+	mkdir -pv ~/Documents/tools
 	# Wallpaper Tool
 	lnf
 	cp -v cfg/i3/tools/wallpaper.sh ~/Documents/tools/
@@ -115,26 +116,39 @@ install_i3_laptop() {
 	# i3blocks
 	lnf
 	cp -v cfg/i3blocks/laptop/config ~/.config/i3blocks/config
-	lnf
-	mkdir ~/.config/i3blocks/blocks
 	lnfb
-	cp -v cfg/i3blocks/laptop/blocks/* ~/.config/i3blocks/blocks/
+	cp -rv cfg/i3blocks/laptop/blocks ~/.config/i3blocks/blocks
 	lnfbe
 }
 
 configure_common() {
+	### Install Config Files
 	lnh "Installing Common Configuration Files"
 	# ZSH
 	lnf
 	cp -v cfg/zshrc ~/.zshrc
-
 	# VIM
 	lnf
 	cp -v cfg/vimrc ~/.vimrc
-	# Install Vim Plugins
 	vim +PlugInstall +qall
+	# MPD
+	awk '{gsub(/lain/,"'$USER'")}1' cfg/mpd/mpd.conf > mpd.conf.temp && mv mpd.conf.temp cfg/mpd/mpd.conf
+	lnfb
+	cp -rv cfg/mpd ~/.mpd
+	lnfbe
+	lnf
+	mkdir -pv ~/Music
+	# NCMPCPP
+	lnf
+	cp -v cfg/ncmpcpp ~/.ncmpcpp
 
-	# MPD + NCMPCPP
+	### Install Services
+	# MPD
+	systemctl --user enable mpd.service
+	systemctl --user start mpd.service
+	# NetworkManager
+	sudo systemctl enable NetworkManager.service
+	sudo systemctl start NetworkManager.service
 }
 
 echo "Select a Window Manager"
