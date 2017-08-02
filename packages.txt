@@ -1,0 +1,14 @@
+termite
+
+vim
+vim-plug
+
+mpd
+ncmpcpp
+
+zsh
+oh-my-zsh
+
+networkmanager
+
+
