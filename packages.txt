@@ -5,7 +5,9 @@ vim
 vim-plug
 
 mpd
+mpc
 ncmpcpp
+beets
 
 zsh
 oh-my-zsh AUR

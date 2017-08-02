@@ -137,10 +137,14 @@ configure_common() {
 	cp -rv cfg/mpd ~/.mpd
 	lnfbe
 	lnf
-	mkdir -pv ~/Music
+	mkdir -pv ~/Music/beets
 	# NCMPCPP
 	lnf
 	cp -v cfg/ncmpcpp ~/.ncmpcpp
+	# Beets
+	lnfb
+	cp -rv cfg/beets ~/.config/beets
+	lnfbe
 
 	### Install Services
 	# MPD

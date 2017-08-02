@@ -1,0 +1,6 @@
+directory: ~/Music/beets
+library: ~/Music/beets/library.db
+
+mpdupdate:
+        host: localhost
+        port: 6600
