@@ -25,6 +25,7 @@ ln() {
 }
 
 install_i3() {
+	# Install Packages
 	if ! (pacman -Q i3-gaps >/dev/null 2>&1);
 	then
 		lnh "Installing i3-gaps from AUR..."
@@ -56,12 +57,28 @@ install_i3() {
 		pacman -S compton --noconfirm
 	fi;
 
-	### Configuration Files
+	### Install Service Files
+	lnh "Installing Services"
+	# Suspend locker
+	lnf
+	sudo cp -v cfg/systemd/system/suspend@.service /etc/systemd/system/
+	# Auto locker
+	lnf
+	sudo cp -v cfg/systemd/user/locker.service /etc/systemd/user
+	sudo systemctl daemon-reload
+	lnh "Enabling Services"
+	lnf
+	sudo systemctl enable suspend@$USER.service
+	lnf
+	systemctl --user enable locker.service
+
+
+	### Install Configuration Files
 	lnh  "Installing General Configuration Files"
 	# Compton
 	lnf
 	cp -v cfg/compton/config ~/.config/compton/config
-	# NCMPCPP config
+	# NCMPCPP ws10 config
 	lnf
 	cp -v cfg/termite/ncmpcpp_config ~/.config/termite/ncmpcpp_config
 
@@ -74,21 +91,6 @@ install_i3() {
 	lnfb
 	cp -v cfg/wallpapers/wallpaper* ~/Pictures/
 	lnfbe
-
-	### Install Service Files
-	lnh "Installing Services"
-	# Suspend locker
-	lnf
-	sudo cp -v cfg/systemd/system/suspend@.service /etc/systemd/system/
-	# Auto locker
-	lnf
-	sudo cp -v cfg/systemd/user/locker.service /etc/systemd/user
-	sudo systemctl daemon-reload
-	lnh "Enabling Services"
-	lnf
-	sudo systemctl enable suspend@$USER.service	
-	lnf
-	systemctl --user enable locker.service
 
 	lnh "Select a Platform"
 	platform_opt=("Desktop" "Laptop")
@@ -118,7 +120,21 @@ install_i3_laptop() {
 	lnfb
 	cp -v cfg/i3blocks/laptop/blocks/* ~/.config/i3blocks/blocks/
 	lnfbe
-	
+}
+
+configure_common() {
+	lnh "Installing Common Configuration Files"
+	# ZSH
+	lnf
+	cp -v cfg/zshrc ~/.zshrc
+
+	# VIM
+	lnf
+	cp -v cfg/vimrc ~/.vimrc
+	# Install Vim Plugins
+	vim +PlugInstall +qall
+
+	# MPD + NCMPCPP
 }
 
 echo "Select a Window Manager"
@@ -134,6 +150,6 @@ do
 			install_i3
 			break
 			;;
-		*) echo "Invalid Option";; 
+		*) echo "Invalid Option";;
 	esac
 done
