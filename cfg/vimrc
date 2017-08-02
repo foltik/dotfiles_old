@@ -1,0 +1,14 @@
+call plug#begin('~/.vim/plugged')
+Plug 'vim-airline/vim-airline'
+call plug#end()
+
+" general config
+set number
+
+" Allow saving files as root when vim was launched as user
+cmap w!! w !sudo tee > /dev/null %
+
+" vim-airline configuration
+set laststatus=2
+let g:airline_powerline_fonts = 1
+let g:airline#extensions#tabline#enabled = 1
