@@ -1,5 +1,8 @@
 call plug#begin('~/.vim/plugged')
 Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'ryanoasis/vim-devicons'
+Plug 'scrooloose/nerdtree'
 call plug#end()
 
 " general config
@@ -12,3 +15,13 @@ cmap w!! w !sudo tee > /dev/null %
 set laststatus=2
 let g:airline_powerline_fonts = 1
 let g:airline#extensions#tabline#enabled = 1
+let g:webdevicons_enable_airline_statusline = 1
+let g:airline_theme='simple'
+
+" nerdtree configuration
+map <C-n> :NERDTreeToggle<CR>
+" auto open tree if used on directory
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in") | exe 'NERDTree' argv()[0] | wincmd p | ene | endif
+" auto close if only remaining window is tree
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
