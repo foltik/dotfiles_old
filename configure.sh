@@ -124,6 +124,8 @@ install_i3_laptop() {
 configure_common() {
 	### Install Config Files
 	lnh "Installing Common Configuration Files"
+	# powerlevel9k
+	sudo git clone https://github.com/bhilburn/powerlevel9k.git /usr/share/oh-my-zsh/themes/powerlevel9k
 	# ZSH
 	lnf
 	cp -v cfg/zshrc ~/.zshrc
