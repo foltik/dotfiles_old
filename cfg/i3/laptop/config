@@ -200,3 +200,8 @@ exec_always /home/lain/Documents/tools/wallpaper.sh
 
 # NCMPCPP
 exec termite -r ncmpcpp -e ncmpcpp -c /home/lain/.config/termite/ncmpcpp_config
+
+# MPC Media
+bindsym $mod+p exec mpc toggle
+bindsym $mod+[ exec mpc seek 0
+bindsym $mod+] exec mpc next
