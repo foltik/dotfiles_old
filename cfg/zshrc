@@ -5,7 +5,7 @@ ZSH=/usr/share/oh-my-zsh/
 source /usr/share/autojump/autojump.zsh
 
 # ZSH Theme
-ZSH_THEME="agnoster"
+ZSH_THEME="powerlevel9k/powerlevel9k"
 
 # Use case-sensitive completion.
 CASE_SENSITIVE="true"
