@@ -33,7 +33,7 @@ HIST_STAMPS="yyyy-mm-dd"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=(git archlinux autojump command-not-found)
 
 
 ### User configuration
@@ -43,7 +43,7 @@ export MANPATH="/usr/local/man:$MANPATH"
 export LANG=en_US.UTF-8
 
 # Preferred editor for local and remote sessions
-export EDITOR='vim'
+export EDITOR='nvim'
 
 # Compilation flags
 export ARCHFLAGS="-arch x86_64"
@@ -66,3 +66,33 @@ if [[ ! -d $ZSH_CACHE_DIR ]]; then
 fi
 
 source $ZSH/oh-my-zsh.sh
+
+export PATH="$HOME/opt/i686-elf/bin:$PATH"
+
+alias vpnon="sudo systemctl start openvpn-client@BoltWolf"
+alias vpnoff="sudo systemctl stop openvpn-client@BoltWolf"
+
+alias vim=nvim
+
+function masm() (
+	set -e
+	export WINEPREFIX=~/.wine-masm
+	FILENAME="$(basename "$1")"
+	EXT="${FILENAME##*.}"
+	if [[ "$EXT" = "asm" ]]; then
+		FILENAME="${FILENAME%.*}"
+	fi
+	
+	UNIX_PATH="$(dirname "$1")/$FILENAME"
+	WINDOWS_PATH=$(echo "$UNIX_PATH" | tr '/' '\\')
+
+	wine ml -nologo -c -coff -Zi "$WINDOWS_PATH.asm"
+
+	wine link /NOLOGO /SUBSYSTEM:CONSOLE /ENTRY:main \
+		/LIBPATH:'C:\Irvine' \
+		irvine32.lib kernel32.lib user32.lib "$WINDOWS_PATH.obj"
+
+	rm $UNIX_PATH.obj
+
+	wine "$WINDOWS_PATH.exe"
+)

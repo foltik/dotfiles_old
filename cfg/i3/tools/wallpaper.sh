@@ -1,4 +1,11 @@
 #!/bin/bash
 
-idx=$(( (RANDOM % 3) + 1))
-feh --bg-scale /home/lain/Pictures/wallpaper$idx.jpg
+killall -q xwinwrap
+
+idx=$(( (RANDOM % 5) + 1))
+if [[ $idx -eq 5 ]];
+then
+	xwinwrap -ov -fs -- gifview -w WID -a /home/lain/Pictures/wallpaper.gif 2>/dev/null
+else
+	feh --bg-scale /home/lain/Pictures/wallpaper$idx.jpg
+fi

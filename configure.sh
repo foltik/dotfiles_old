@@ -1,97 +1,78 @@
 #!/bin/zsh
 
+# Print Header
 lnh() {
 	print -Pn '%B%F{green}### '
 	print -n $1
 	print -P ' ###%f%b'
 }
 
-lnf() {
-	print -Pn '%B%F{yellow}>>>%f%b '
-}
-
-lnfb() {
-	print -P '%B%F{yellow}[[[%f%b'
-}
-
-lnfbe() {
-	print -P '%B%F{yellow}]]]'
-}
-
+# Print subheader
 ln() {
-	Print -Pn '%B%F{yellow}>>> '
-	Print -n $1
-	Print -P '%f%b'
+	print -Pn '%B%F{yellow}>>> '
+	print -n $1
+	print -P '%f%b'
+}
+
+pac_install() {
+    if ! (pacman -Q $1 >/dev/null 2>&1);
+    then
+        ln "Installing $1 from Official Repos..."
+        sudo pacman -S $1 --noconfirm
+    fi;
+}
+
+aur_install() {
+    if ! (pacman -Q $1 >/dev/null 2>&1);
+    then
+        ln "Installing $1 from AUR..."
+        yaourt -S $1 --noconfirm
+    fi;
+}
+
+svc_install() {
+    sudo cp -v "$1" '/etc/systemd/system'
+}
+
+svc_install_user() {
+    sudo cp -v "$1" '/etc/systemd/user'
+}
+
+svc_enable() {
+    sudo systemctl enable $1
+}
+
+svc_enable_user() {
+    systemctl --user enable $1
 }
 
 install_i3() {
-	# Install Packages
-	if ! (pacman -Q i3-gaps >/dev/null 2>&1);
-	then
-		lnh "Installing i3-gaps from AUR..."
-		yaourt -S i3-gaps --noconfirm
-	fi;
+    lnh "Installing i3"
 
-	if ! (pacman -Q i3blocks-gaps-git >/dev/null 2>&1);
-	then
-		lnh "Installing i3blocks-gaps-git from AUR..."
-		yaourt -S i3blocks-gaps-git --noconfirm
-	fi;
+    ln "Installing Packages"
+    aur_install i3-gaps
+    aur_install i3blocks-gaps-git
+    aur_install i3lock
+    aur_install i3lock-fancy-dualmonitors-git
+    pac_install compton
 
-	if ! (pacman -Q i3lock >/dev/null 2>&1);
-	then
-		lnh "Installing i3lock"
-		pacman -S i3lock --noconfirm
-	fi;
+	ln "Installing Services"
+    svc_install cfg/systemd/system/suspend@.service # suspend locker
+    svc_install_user cfg/systemd/user/locker.service # xautolock
 
-
-	if ! (pacman -Q i3lock-fancy-dualmonitors-git >/dev/null 2>&1);
-	then
-		lnh "Installing i3lock-fancy"
-		yaourt -S i3lock-fancy-dualmonitors-git --noconfirm
-	fi;
-
-	if ! (pacman -Q compton >/dev/null 2>&1);
-	then
-		lnh "Installing Compton..."
-		pacman -S compton --noconfirm
-	fi;
-
-	### Install Service Files
-	lnh "Installing Services"
-	# Suspend locker
-	lnf
-	sudo cp -v cfg/systemd/system/suspend@.service /etc/systemd/system/
-	# Auto locker
-	lnf
-	sudo cp -v cfg/systemd/user/locker.service /etc/systemd/user
+	ln "Enabling Services"
 	sudo systemctl daemon-reload
-	lnh "Enabling Services"
-	lnf
-	sudo systemctl enable suspend@$USER.service
-	lnf
-	systemctl --user enable locker.service
+    svc_enable suspend@$USER.service
+    svc_enable_user locker.service
 
-
-	### Install Configuration Files
-	lnh  "Installing General Configuration Files"
-	# Compton
-	lnf
+	ln  "Installing Configuration Files"
 	cp -v cfg/compton/config ~/.config/compton/config
-	# NCMPCPP ws10 config
-	lnf
 	cp -v cfg/termite/ncmpcpp_config ~/.config/termite/ncmpcpp_config
 
-	### Install Tools
-	lnh "Installing General Tools"
-	lnf
+	ln "Installing Tools"
 	mkdir -pv ~/Documents/tools
-	# Wallpaper Tool
-	lnf
 	cp -v cfg/i3/tools/wallpaper.sh ~/Documents/tools/
-	lnfb
 	cp -v cfg/wallpapers/wallpaper* ~/Pictures/
-	lnfbe
 
 	lnh "Select a Platform"
 	platform_opt=("Desktop" "Laptop")
@@ -99,10 +80,11 @@ install_i3() {
 	do
 		case $opt in
 			"Desktop")
+                lnh "Platform Not Supported with i3"
+                exit
 				break
 				;;
 			"Laptop")
-				lnh "Installing i3"
 				install_i3_laptop
 				break
 				;;
@@ -112,58 +94,47 @@ install_i3() {
 }
 
 install_i3_laptop() {
-	lnh "Installing Laptop Configuration Files"
-	# i3blocks
-	lnf
+	ln "Installing Laptop Configuration Files"
 	cp -v cfg/i3blocks/laptop/config ~/.config/i3blocks/config
-	lnfb
 	cp -rv cfg/i3blocks/laptop/blocks ~/.config/i3blocks/blocks
-	lnfbe
 }
 
 configure_common() {
-	### Install Config Files
-	lnh "Installing Common Configuration Files"
+	ln "Installing Common Configuration Files"
 	# powerlevel9k
 	sudo git clone https://github.com/bhilburn/powerlevel9k.git /usr/share/oh-my-zsh/themes/powerlevel9k
-	# ZSH
-	lnf
-	cp -v cfg/zshrc ~/.zshrc
-	# VIM
-	lnf
-	cp -v cfg/vimrc ~/.vimrc
-	vim +PlugInstall +qall
-	# MPD
-	awk '{gsub(/lain/,"'$USER'")}1' cfg/mpd/mpd.conf > mpd.conf.temp && mv mpd.conf.temp cfg/mpd/mpd.conf
-	lnfb
-	cp -rv cfg/mpd ~/.mpd
-	lnfbe
-	lnf
-	mkdir -pv ~/Music/beets
-	# NCMPCPP
-	lnf
-	cp -v cfg/ncmpcpp ~/.ncmpcpp
-	# Beets
-	lnfb
+	
+    # zsh
+    cp -v cfg/zshrc ~/.zshrc
+	
+    # neovim
+    cp -v cfg/nvim/init.vim ~/.config/nvim
+	nvim +PlugInstall +qall
+	
+    # mpd
+    awk '{gsub(/lain/,"'$USER'")}1' cfg/mpd/mpd.conf > mpd.conf.temp && mv mpd.conf.temp cfg/mpd/mpd.conf
+	cp -rv cfg/mpd ~/.config/mpd
+	
+    # beets
+    mkdir -pv ~/Music/beets
 	cp -rv cfg/beets ~/.config/beets
-	lnfbe
 
-	### Install Services
-	# MPD
-	systemctl --user enable mpd.service
-	systemctl --user start mpd.service
-	# NetworkManager
-	sudo systemctl enable NetworkManager.service
-	sudo systemctl start NetworkManager.service
+    # ncmpcpp
+    cp -v cfg/ncmpcpp/config ~/.ncmpcpp/
+
+    ln "Installing Common Services"
+    svc_enable_user mpd
+    svc_enable NetworkManager
 }
 
-echo "Select a Window Manager"
+lnh "Select a Window Manager"
 wm_opt=("Gnome" "i3")
 select opt in "${wm_opt[@]}"
 do
 	case $opt in
 		"Gnome")
-			echo "gnome"
+            lnh "Window Manager Not Supported"
+            exit
 			break
 			;;
 		"i3")
@@ -173,3 +144,5 @@ do
 		*) echo "Invalid Option";;
 	esac
 done
+
+configure_common

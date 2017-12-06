@@ -2,8 +2,9 @@ ttf-vlgothic AUR
 nerd-fonts-complete AUR
 termite
 
-vim
-vim-plug
+nvim
+ctags
+# vim-plug --- clone from github
 
 mpd
 mpc
