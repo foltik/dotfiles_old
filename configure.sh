@@ -129,7 +129,7 @@ configure_common() {
     nvim +PlugInstall +qall
 	
     # mpd
-    mkdir -pv ~/.config/mpd
+    mkdir -pv ~/.config/mpd/playlists
     awk '{gsub(/lain/,"'$USER'")}1' cfg/mpd/mpd.conf > mpd.conf.temp && mv mpd.conf.temp cfg/mpd/mpd.conf
     cp -rv cfg/mpd/* ~/.config/mpd/
 	
