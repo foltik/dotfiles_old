@@ -37,7 +37,7 @@
 
 urxvt.depth: 32
 urxvt.background: rgba:0000/0000/0200/c800
-urxvt.font: xft:Sauce Code Pro Nerd Font-12:style=Regular:antialias=true
+urxvt.font: xft:Sauce Code Pro Nerd Font-12:style=Regular:antialias=true,xft:VL Gothic-12:style=regular:antialias=true
 urxvt.scrollBar: false
 urxvt.perl-ext-common: default,matcher
 urxvt.url-launcher: /usr/bin/xdg-open
