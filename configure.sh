@@ -113,27 +113,30 @@ install_common() {
 }
 
 configure_common() {
-	ln "Installing Common Configuration Files"
-	# powerlevel9k
-	sudo git clone https://github.com/bhilburn/powerlevel9k.git /usr/share/oh-my-zsh/themes/powerlevel9k
+    ln "Installing Common Configuration Files"
+    # powerlevel9k
+    sudo git clone https://github.com/bhilburn/powerlevel9k.git /usr/share/oh-my-zsh/themes/powerlevel9k
 
-	# urxvt
-	cp -v cfg/Xdefaults ~/.Xdefaults
+    # urxvt
+    cp -v cfg/Xdefaults ~/.Xdefaults
 	
     # zsh
     cp -v cfg/zshrc ~/.zshrc
 	
     # neovim
+    mkdir -pv ~/.config/nvim
     cp -v cfg/nvim/init.vim ~/.config/nvim
-	nvim +PlugInstall +qall
+    nvim +PlugInstall +qall
 	
     # mpd
+    mkdir -pv ~/.config/mpd
     awk '{gsub(/lain/,"'$USER'")}1' cfg/mpd/mpd.conf > mpd.conf.temp && mv mpd.conf.temp cfg/mpd/mpd.conf
-	cp -rv cfg/mpd ~/.config/mpd
+    cp -rv cfg/mpd/* ~/.config/mpd/
 	
     # beets
     mkdir -pv ~/Music/beets
-	cp -rv cfg/beets ~/.config/beets
+    mkdir -pv ~/.config/beets
+    cp -rv cfg/beets/* ~/.config/beets
 
     # ncmpcpp
     mkdir -pv ~/.ncmpcpp
