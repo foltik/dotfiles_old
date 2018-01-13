@@ -99,10 +99,26 @@ install_i3_laptop() {
 	cp -rv cfg/i3blocks/laptop/blocks ~/.config/i3blocks/blocks
 }
 
+install_common() {
+	ln "Installing Common Packages"
+	pac_install rxvt-unicode
+	pac_install zsh
+	pac_install autojump
+	pac_install neovim
+	pac_install mpd
+	pac_install beets
+	pac_install ncmpcpp
+	aur_install oh-my-zsh-git
+	aur_install nerd-fonts-source-code-pro
+}
+
 configure_common() {
 	ln "Installing Common Configuration Files"
 	# powerlevel9k
 	sudo git clone https://github.com/bhilburn/powerlevel9k.git /usr/share/oh-my-zsh/themes/powerlevel9k
+
+	# urxvt
+	cp -v cfg/Xdefaults ~/.Xdefaults
 	
     # zsh
     cp -v cfg/zshrc ~/.zshrc
@@ -120,25 +136,33 @@ configure_common() {
 	cp -rv cfg/beets ~/.config/beets
 
     # ncmpcpp
+    mkdir -pv ~/.ncmpcpp
     cp -v cfg/ncmpcpp/config ~/.ncmpcpp/
 
     ln "Installing Common Services"
     svc_enable_user mpd
-    svc_enable NetworkManager
+    #svc_enable NetworkManager
+    
+    ln "Changing Shell"
+    chsh -s /bin/zsh
 }
 
 lnh "Select a Window Manager"
-wm_opt=("Gnome" "i3")
+wm_opt=("Gnome" "i3" "None (Only install common config)")
 select opt in "${wm_opt[@]}"
 do
 	case $opt in
 		"Gnome")
-            lnh "Window Manager Not Supported"
-            exit
+		        lnh "Not yet fully supported!"
+            		exit
 			break
 			;;
 		"i3")
 			install_i3
+			break
+			;;
+		"None (Only install common config)")
+			install_common
 			break
 			;;
 		*) echo "Invalid Option";;

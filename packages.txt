@@ -1,6 +1,5 @@
 ttf-vlgothic AUR
-nerd-fonts-complete AUR
-termite
+nerd-fonts-source-code-pro AUR
 
 nvim
 ctags
@@ -13,6 +12,7 @@ beets
 
 zsh
 oh-my-zsh AUR
+rxvt-unicode
 
 networkmanager
 
