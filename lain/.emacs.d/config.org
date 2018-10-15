@@ -1,0 +1,710 @@
+* Emacs Config
+** Font
+Set the font to something nice that will display ligntures
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'default-frame-alist '(font . "Fira Code 12"))
+(set-face-attribute 'default t :font "Fira Code 12")
+#+END_SRC
+
+** Customize file
+Makes it so the customize data isn't schlunked in my init.el
+#+BEGIN_SRC emacs-lisp
+(setq custom-file (concat user-emacs-directory "_customize.el"))
+(load custom-file t)
+#+END_SRC
+
+** Remove menu bar
+Disable the useless cruft at the top of the screen   
+#+BEGIN_SRC emacs-lisp
+(menu-bar-mode 0)
+(tool-bar-mode 0)
+(scroll-bar-mode -1)
+#+END_SRC
+   
+** Show matching parenthesis
+Shows matching parenthesis  
+#+BEGIN_SRC emacs-lisp
+(require 'paren)
+(set-face-background 'show-paren-match (face-background 'default))
+(set-face-foreground 'show-paren-match "#def")
+(set-face-attribute 'show-paren-match nil :weight 'extra-bold)
+(setq show-paren-delay 0)
+(show-paren-mode)
+#+END_SRC
+   
+** Show columns
+#+BEGIN_SRC emacs-lisp
+(setq column-number-mode t)
+#+END_SRC
+      
+** Transparency
+Sets the window's transparency.  
+The first number in the alpha section applies when the window is
+active, the second when it's inactive.
+#+BEGIN_SRC emacs-lisp
+(set-frame-parameter (selected-frame) 'alpha 85)
+(add-to-list 'default-frame-alist '(alpha . 85))
+#+END_SRC
+    
+** Scrolling
+#+BEGIN_SRC emacs-lisp
+(setq scroll-conservatively 100) ;; don't scroll a metric boatload when bottom is hit
+#+END_SRC
+
+** Disable bell
+Shut up, emacs.
+#+BEGIN_SRC emacs-lisp
+(setq ring-bell-function 'ignore)
+#+END_SRC
+   
+** Show relative line numbers
+#+BEGIN_SRC emacs-lisp
+(unless (version< emacs-version "26.1")
+(setq display-line-numbers-type 'relative)
+(setq linum-format " %3d ")
+(global-display-line-numbers-mode t))
+#+END_SRC
+
+** y or n prompts
+Make yes-or-no prompts ask for y or n instead
+#+BEGIN_SRC emacs-lisp
+(defalias 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+   
+** Tabs are spaces?!
+#+BEGIN_SRC emacs-lisp
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+(setq indent-line-function 'insert-tab)
+#+END_SRC
+   
+** Keep backup files out of the way
+By default, emacs makes files like =file~= and =#file#= and clutters up
+my projects. Instead, store them in =/tmp=!
+#+BEGIN_SRC emacs-lisp
+(setq backup-directory-alist
+    `((".*" . ,temporary-file-directory)))
+(setq auto-save-file-name-transforms
+    `((".*" ,temporary-file-directory t)))
+#+END_SRC
+* Package Repo Config
+** Repo Location
+Let's start by configuring the repositories
+#+BEGIN_SRC emacs-lisp
+    (require 'package)
+
+    (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                             ("marmalade" . "https://marmalade-repo.org/packages/")
+                             ("melpa-stable" . "https://stable.melpa.org/packages/")
+                             ("melpa" . "https://melpa.org/packages/")
+                             ("org" . "https://orgmode.org/elpa/")))
+    (setq package-enable-at-startup nil)
+    
+    (package-initialize)
+#+END_SRC
+
+** use-package
+use-package for installing packages
+https://github.com/jwiegley/use-package
+#+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package))
+
+(eval-when-compile
+    (require 'use-package))
+
+(setq use-package-compute-statistics t)
+(setq use-package-always-ensure t)
+(setq use-package-always-pin "melpa-stable")
+(setq use-package-verbose t)
+#+END_SRC
+
+* General Packages Configuration
+** Modeline cleanup
+Adds support for =:diminish= in use-package declarations,
+basically hides a mode from the modeline.
+#+BEGIN_SRC emacs-lisp
+(use-package diminish)
+#+END_SRC
+
+** Keybind completion
+Pops up a buffer that helps you navigate and complete commands
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+    :diminish
+    :config
+    (which-key-mode))
+#+END_SRC
+
+** Keybind Manager
+General manages my keybindings.
+
+#+BEGIN_SRC emacs-lisp
+(use-package general
+    :pin melpa)
+#+END_SRC
+
+*** Leader definitions
+Create a leader key, like the \ in vim.
+In this case, =SPC= is used as a leader. Following the leader,
+different buttons bring you to different options.
+See [[https://github.com/noctuid/general.el#which-key-integration][here]] for which-key integration information
+
+#+BEGIN_SRC emacs-lisp
+(general-create-definer foltz-leader-def
+    :keymaps 'override
+    :states 'normal
+    :prefix "SPC"
+        "m" '(:ignore t :which-key "major-mode...")
+        "o" '(:ignore t :which-key "org-mode...")
+        "g" '(:ignore t :which-key "git...")
+        "h" '(:ignore t :which-key "help...")
+        "b" '(:ignore t :which-key "buffer...")
+        "w" '(:ignore t :which-key "window...")
+        "f" '(:ignore t :which-key "file..."))
+#+END_SRC
+
+**** m - major-modes
+#+BEGIN_SRC emacs-lisp
+(general-create-definer foltz-major-def
+    :states 'normal
+    :prefix "SPC m")
+#+END_SRC
+
+**** o - org-mode
+#+BEGIN_SRC emacs-lisp
+(general-create-definer foltz-org-def
+    :keymaps 'override
+    :states
+'normal
+    :prefix "SPC o")
+#+END_SRC
+
+**** g - git
+#+BEGIN_SRC emacs-lisp
+(general-create-definer foltz-git-def
+    :states 'normal
+    :keymaps 'override
+    :prefix "SPC g")
+#+END_SRC
+
+**** h - help
+#+BEGIN_SRC emacs-lisp
+(general-create-definer foltz-help-def
+    :states 'normal
+    :keymaps 'override
+    :prefix "SPC h")
+
+(foltz-help-def
+    "?" 'help-for-help
+    "h" 'help-for-help
+    "k" 'describe-key)
+#+END_SRC
+
+**** b - buffer
+#+BEGIN_SRC emacs-lisp
+(general-create-definer foltz-buffer-def
+    :states 'normal
+    :keymaps 'override
+    :prefix "SPC b")
+
+(foltz-buffer-def
+    "i" 'ibuffer)
+#+END_SRC
+
+**** w - window
+#+BEGIN_SRC emacs-lisp
+(general-create-definer foltz-window-def
+    :states 'normal
+    :keymaps 'override
+    :prefix "SPC w")
+
+(foltz-window-def
+    "o" 'delete-other-windows)
+#+END_SRC
+
+**** f - file
+#+BEGIN_SRC emacs-lisp
+(general-create-definer foltz-file-def
+    :states 'normal
+    :keymaps 'override
+    :prefix "SPC f")
+
+(defun foltz-config-visit ()
+    (interactive)
+    (find-file (concat user-emacs-directory "config.org")))
+
+(defun foltz-config-reload ()
+    (interactive)
+    (org-babel-load-file
+        (expand-file-name "config.org" user-emacs-directory)))
+
+(foltz-file-def
+    "w"   'save-buffer
+    "r"   'revert-buffer
+    "e"   '(:ignore t :which-key "emacs files")
+    "e e" 'foltz-config-visit
+    "e r" 'foltz-config-reload) 
+#+END_SRC
+
+** Vim
+Evil is pretty much the entirety of Vim in Emacs.
+[[https://github.com/Somelauw/evil-org-mode][evil-org]] adds nice bindings to org-mode.
+
+#+BEGIN_SRC emacs-lisp
+(use-package evil
+    :after general
+    :diminish undo-tree-mode
+    :init
+    (setq evil-want-integration nil)
+    (setq evil-want-keybinding nil)
+
+    :config
+    (evil-mode t)
+
+    :custom
+    (evil-shift-width 4 "Set indent to 4 spaces"))
+
+(use-package evil-leader
+    :after evil
+    :init
+    (defun foltz-window-split ()
+        (interactive)
+        (evil-window-split)
+        (evil-window-down 1))
+    (defun foltz-window-vsplit ()
+        (interactive)
+        (evil-window-vsplit)
+        (evil-window-right 1))
+
+    :general
+    (:keymaps 'override
+     :states 'normal
+     "U" 'undo-tree-visualize)
+    (foltz-window-def
+        "-" 'foltz-window-split
+        "=" 'foltz-window-vsplit
+        "h" 'evil-window-left
+        "j" 'evil-window-down
+        "k" 'evil-window-up
+        "l" 'evil-window-right
+        "H" 'evil-window-far-left
+        "J" 'evil-window-move-very-bottom
+        "K" 'evil-window-move-very-top
+        "L" 'evil-window-far-right
+        "<" 'evil-window-decrease-width
+        ">" 'evil-window-increase-width
+        "^" 'evil-window-decrease-height
+        "%" 'evil-window-increase-height
+        "n" 'evil-window-new
+        "c" 'evil-window-delete
+        "w" 'evil-window-next
+        "W" 'evil-window-prev
+        "r" 'evil-window-rotate-downwards
+        "|" 'evil-window-set-width
+        "_" 'evil-window-set-height)
+
+    :config
+    (global-evil-leader-mode))
+
+(use-package evil-org
+    :after (evil org)
+    :hook (org-mode . evil-org-mode)
+    :config
+    (add-hook 'evil-org-mode (lambda () 
+        (evil-org-set-key-theme
+            '(textobjects insert navigation 
+              additional shift todo calendar)))))
+#+END_SRC
+
+** Startup dashboard
+Show a cool custom buffer on startup
+#+BEGIN_SRC emacs-lisp
+(use-package dashboard
+    :diminish page-break-lines-mode
+
+    :config
+    (dashboard-setup-startup-hook)
+    (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+
+    :custom
+    (dashboard-startup-banner 'logo)
+    (dashboard-banner-logo-title "Welcome to Electronic Macs")
+    (dashboard-items
+        '((recents . 5)
+          (agenda)
+          (bookmarks . 5)
+          (registers . 5))))
+#+END_SRC
+
+** Folder tree
+A cool toggleable directory structure sidebar
+It also needs icon fonts, installed with =M-x all-the-icons-install-fonts=
+#+BEGIN_SRC emacs-lisp
+(use-package all-the-icons)
+(use-package neotree
+    :after all-the-icons
+    :commands neotree-toggle
+    :general
+    (foltz-leader-def
+        :states 'normal
+        "t" 'neotree-toggle)
+    :custom
+    (neo-theme (if (display-graphic-p) 'icons 'arrow)))
+#+END_SRC
+** Organization
+*** org-mode
+Keep org-mode up to date straight from the cow's utters.
+If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]].
+#+BEGIN_SRC emacs-lisp
+(use-package org
+    :pin org
+    :mode ("\\.org\\'" . org-mode)
+    :hook (org-mode . org-indent-mode)
+
+    :init   
+    ; <el expands to an emacs lisp source block
+    (add-to-list 'org-structure-template-alist 
+        '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
+
+    :general
+    (foltz-major-def
+        :keymaps 'org-mode-map
+        "e" 'org-export-dispatch
+        "a" 'org-attach)
+    (foltz-major-def
+        :keymaps 'org-capture-mode-map
+        "c" 'org-capture-finalize
+        "w" 'org-capture-refile
+        "k" 'org-capture-kill)
+    (foltz-org-def
+        "a" 'org-agenda
+        "c" 'org-capture
+        "l" 'org-store-link
+        "b" 'org-switchb)
+        
+        
+    :custom
+    (org-directory "~/Documents/org")
+    (org-agenda-files '("~/Documents/org/"))
+    (org-default-notes-file "notes.org")
+    (org-agenda-include-diary t)
+    (org-src-window-setup 'current-window "Edit source code in the current window")
+    (org-src-fontify-natively t "Highlight syntax in source blocks")
+    (org-latex-to-pdf-process '("latexmk -f pdf %f") "Use pdflatex for export")
+    (org-capture-templates
+    '(("j" "Journal entry" entry
+        (file+olp+datetree "journal.org")
+        ("**** Happenings of today"))
+     ("t" "Todo" entry
+        (file+olp+datetree "notes.org")
+        "*** TODO %^{Thing to do}\nDEADLINE: %t\n")
+     ("T" "Thoughts" entry
+        (file+headline "notes.org" "Thoughts")
+        "** %^{Summary} %t :thoughts:\n")
+     ("s" "School-related task" entry
+        (file+datetree+prompt "school.org")
+        "*** TODO %^{What needs be done}\n DEADLINE: %t\n")
+     ("d" "Dream Journal" entry
+        (file+olp+datetree "dreams.org")
+        "**** Dream\n")
+     ("m" "Bookmark" entry
+        (file+headline "links.org" "Unsorted sites")
+        "[[%^{link}][%^{description}]]\n"))))
+#+END_SRC
+
+*** Pretty org-mode bullets
+Make bullets look choice
+#+BEGIN_SRC emacs-lisp
+(use-package org-bullets
+    :hook (org-mode . org-bullets-mode))
+#+END_SRC
+
+** Fuzzy Matching
+Ivy, swiper, and counsel all provide fuzzy-matching on different
+emacs operations.
+#+BEGIN_SRC emacs-lisp
+(use-package ivy
+    :init
+    ; Define some functions to bind to
+    (defun foltz-kill-curr-buffer ()
+        (interactive)
+        (kill-buffer (current-buffer)))
+    (defun foltz-kill-all-buffers ()
+        (interactive)
+        (mapc 'kill-buffer (buffer-list)))
+
+    :general
+    (foltz-buffer-def
+        "b" 'ivy-switch-buffer
+        "v" 'ivy-push-view
+        "V" 'ivy-pop-view
+        "k" 'foltz-kill-curr-buffer
+        "K" 'foltz-kill-all-buffers)
+
+    :custom
+    (ivy-use-virtual-buffers t)
+    (ivy-count-format "%d/%d"))
+
+(use-package swiper
+    :after evil
+    :general
+    (:keymaps 'override 
+     :states 'normal 
+     "/" 'swiper
+     "n" 'evil-search-previous
+     "N" 'evil-search-next))
+
+(use-package counsel
+    :general
+    ("M-x" 'counsel-M-x)
+    (foltz-leader-def
+        :states 'normal
+        "x" 'counsel-M-x)
+    (foltz-file-def
+        "f" 'counsel-find-file)
+    (foltz-help-def
+        "k" 'counsel-descbinds
+        "f" 'counsel-describe-function
+        "v" 'counsel-describe-variable
+        "l" 'counsel-find-library
+        "a" 'counsel-apropos
+        "s" 'counsel-info-lookup-symbol
+        "u" 'counsel-unicode-char))
+#+END_SRC
+
+** Avy
+Hotkeys for jumping to characters with =f=
+#+BEGIN_SRC emacs-lisp
+(use-package avy
+    :general
+    (:keymaps 'override
+     :states 'normal
+     "f" 'avy-goto-char-in-line
+     "F" 'avy-goto-char))
+#+END_SRC
+
+* Programming Packages Configuration
+** Autocompletion
+*** Company
+company auto-completes stuff in the buffer,
+company-quickhelp shows documentation popups
+when idling on a completion candidate.
+#+BEGIN_SRC emacs-lisp
+(use-package company
+    :hook (prog-mode . company-mode)
+    :general
+    (:keymaps 'company-active-map
+     "C-SPC" 'company-abort)
+    :custom
+    (company-maximum-prefix-length 2)
+    (company-idle-delay 0.2 "Decrease idle delay"))
+    
+(use-package company-quickhelp
+    :hook (company-mode . company-quickhelp-mode))
+#+END_SRC
+
+** Prettification
+*** pretty-mode
+[[https://github.com/pretty-mode/pretty-mode][Redisplay parts of the Emacs buffer as pretty symbols.]]
+#+BEGIN_SRC emacs-lisp
+(use-package pretty-mode
+    :hook (prog-mode . pretty-mode)
+    :config
+    (pretty-deactivate-groups
+        '(:equality :sub-and-superscripts))
+    (pretty-activate-groups
+        '(:greek :arithmetic-nary
+          :ordering :ordering-double :ordering-triple
+          :arrows :arrows-twoheaded :punctuation :logic :sets)))
+#+END_SRC
+
+*** prettify-symbols-mode
+Built into emacs since 24.1
+#+BEGIN_SRC emacs-lisp
+(add-hook 'prog-mode-hook 'prettify-symbols-mode)
+(add-hook 'python-mode-hook (lambda ()
+    (mapc (lambda (pair) (push pair prettify-symbols-alist))
+        '(;; Syntax
+         ("not" .      #x00AC)
+         ("in" .       #x2208)
+         ("not in" .   #x2209)
+         ("return" .   #x27fc)
+         ("yield" .    #x27fb)
+         ("for" .      #x2200)
+         ;; Base Types
+         ("int" .      #x2124)
+         ("float" .    #x211d)
+         ("str" .      #x1d54a)
+         ("True" .     #x1d54b)
+         ("False" .    #x1d53d)))))
+#+END_SRC
+
+** Debugging
+[Realgud](https://github.com/realgud/realgud) is a modular frontend for many debuggers
+#+BEGIN_SRC emacs-lisp
+(use-package realgud
+    :commands 
+    (realgud:gdb 
+     realgud:lldb 
+     realgud:node-inspect 
+     realgud:pdb 
+     realgud:trepan3k))
+#+END_SRC
+
+** Syntax checking
+Flycheck does syntax highlighting in a few languages
+#+BEGIN_SRC emacs-lisp
+(use-package flycheck
+    :hook (prog-mode . flycheck-mode))
+#+END_SRC
+
+** Snippets
+Yasnippet adds support for custom snippets
+#+BEGIN_SRC emacs-lisp
+(use-package yasnippet
+    :hook (prog-mode . yas-minor-mode)
+    :custom
+    (yas-snippet-dirs
+        '("~/.emacs.d/snippets"
+          "~/.emacs.d/elpa/yasnippet-snippets-0.6/snippets"))
+    :config
+    (progn
+        (use-package yasnippet-snippets)
+        (yas-reload-all)))
+#+END_SRC
+
+** Git
+It's magic git!
+Keybinds [here](https://github.com/emacs-evil/evil-magit)
+#+BEGIN_SRC emacs-lisp
+(use-package magit
+    :general
+    (foltz-git-def
+        "s" 'magit-status
+        "c" 'magit-commit
+        "d" 'magit-diff
+        "g" 'magit-grep)
+    :config
+    (use-package evil-magit
+        :after evil))
+#+END_SRC
+
+** Languages
+*** Fish
+Beter editing of scripts for the fish shell
+#+BEGIN_SRC emacs-lisp
+(use-package fish-mode
+    :mode "\\.fish\\'")
+#+END_SRC
+*** Markdown
+#+BEGIN_SRC emacs-lisp
+(use-package markdown-mode
+    :mode "\\.md\\'")
+#+END_SRC
+
+*** Python
+Jedi for autocompletion sources
+#+BEGIN_SRC emacs-lisp
+(use-package company-jedi
+    :init
+    (defun foltz-add-python-company-backend () 
+        (add-to-list 'company-backends 'company-jedi))
+    :hook (python-mode . foltz-add-python-company-backend))
+#+END_SRC
+
+*** Javascript
+[[https://github.com/mooz/js2-mode][js2-mode]] improves the default js mode. Keybindings in [[https://github.com/emacs-evil/evil-collection/blob/master/evil-collection-js2-mode.el][this file]].
+#+BEGIN_SRC emacs-lisp
+(use-package js2-mode
+    :mode "\\.js\\'"
+    :interpreter "node")
+#+END_SRC
+
+*** Web-dev
+Web-mode should give everything you need for a web-dev major mode.
+Company integration is done with company-web
+
+#+BEGIN_SRC emacs-lisp
+(use-package web-mode
+    :pin melpa
+    :mode ("\\.html\\'"
+           "\\.php\\'"
+           "\\.blade\\.")
+    :custom
+    (web-mode-code-indent-offset 4)
+    (web-mode-indent-style 4))
+    
+(use-package company-web
+    :init
+    (defun foltz-add-web-company-backend ()
+        (add-to-list 'company-backends 'company-web))
+    :hook (web-mode . foltz-add-web-company-backend))
+#+END_SRC
+
+*** JSON
+Just an enhanced json mode
+#+BEGIN_SRC emacs-lisp
+(use-package json-mode
+    :mode "\\.json\\'")
+#+END_SRC
+
+*** YAML
+Enhanced yaml mode
+#+BEGIN_SRC emacs-lisp
+(use-package yaml-mode
+    :mode "\\.yaml\\'")
+#+END_SRC
+
+*** Arch PKGBUILD
+For editing PKGBUILD files
+#+BEGIN_SRC emacs-lisp
+(use-package pkgbuild-mode
+    :mode ".*PKGBUILD\\'")
+#+END_SRC
+
+*** LaTeX
+AUCTeX is a major mode for editing tex,
+CDLaTeX adds some minor niceities to it.
+company-auctex for completion.
+#+BEGIN_SRC emacs-lisp
+(use-package tex
+    :defer t
+    :ensure auctex
+    :custom
+    (TeX-auto-save t))
+    
+(use-package cdlatex
+    :hook (LaTeX-mode . cdlatex-mode))
+
+(use-package company-auctex
+    :pin melpa
+    :init
+    (defun foltz-add-auctex-company-backend ()
+        (add-to-list 'company-backends 'company-auctex))
+    :hook (LaTeX-mode . foltz-add-auctex-company-backend))
+#+END_SRC
+
+*** C/C++
+Irony handles enhanced C/C++ operations powered by clang
+company-irony for company integration
+
+#+BEGIN_SRC emacs-lisp
+(use-package irony
+    :after counsel
+    :hook ((c++-mode   . irony-mode)
+           (c-mode     . irony-mode)
+           (irony-mode . irony-cdb-autosetup-compile-options)))
+
+(use-package company-irony
+    :init
+    (defun foltz-add-irony-company-backend ()
+        (add-to-list 'company-backends 'company-irony))
+    :hook (irony-mode . foltz-add-irony-company-backend))
+
+(use-package flycheck-irony
+    :hook (irony-mode . flycheck-irony-setup))
+#+END_SRC
+
+
