@@ -57,12 +57,24 @@ Shut up, emacs.
 (setq ring-bell-function 'ignore)
 #+END_SRC
    
-** Show relative line numbers
+** Relative line numbers
+Use the default emacs relative line numbers, but switch to absolute lines when in insert mode.
 #+BEGIN_SRC emacs-lisp
-(unless (version< emacs-version "26.1")
-(setq display-line-numbers-type 'relative)
 (setq linum-format " %3d ")
-(global-display-line-numbers-mode t))
+(setq-default display-line-numbers 'relative
+              display-line-numbers-widen t
+              display-line-numbers-current-absolute t)
+
+(defun foltz-relative-numbers ()
+    (setq-local display-line-numbers 'relative))
+
+(defun foltz-absolute-numbers ()
+    (setq-local display-line-numbers t))
+
+(add-hook 'evil-insert-state-entry-hook #'foltz-absolute-numbers)
+(add-hook 'evil-insert-state-exit-hook #'foltz-relative-numbers)
+
+(global-display-line-numbers-mode t)
 #+END_SRC
 
 ** y or n prompts
@@ -158,6 +170,7 @@ See [[https://github.com/noctuid/general.el#which-key-integration][here]] for wh
     :prefix "SPC"
         "m" '(:ignore t :which-key "major-mode...")
         "o" '(:ignore t :which-key "org-mode...")
+        "p" '(:ignore t :which-key "projectile-mode...")
         "g" '(:ignore t :which-key "git...")
         "h" '(:ignore t :which-key "help...")
         "b" '(:ignore t :which-key "buffer...")
@@ -181,6 +194,9 @@ See [[https://github.com/noctuid/general.el#which-key-integration][here]] for wh
     :prefix "SPC o")
 #+END_SRC
 
+**** p - projectile-mode
+Since we will be binding the entire projectile-mode
+keymap to this, we don't actually need a definer.
 **** g - git
 #+BEGIN_SRC emacs-lisp
 (general-create-definer foltz-git-def
@@ -591,6 +607,17 @@ Keybinds [here](https://github.com/emacs-evil/evil-magit)
         :after evil))
 #+END_SRC
 
+** Projects
+Projectile provides project-level features like
+make shortcuts and file switching
+#+BEGIN_SRC emacs-lisp
+(use-package projectile
+    :bind-keymap
+    :general
+    (foltz-leader-def
+        :states 'normal
+        "p" '(:keymap projectile-command-map)))
+#+END_SRC
 ** Languages
 *** Fish
 Beter editing of scripts for the fish shell
