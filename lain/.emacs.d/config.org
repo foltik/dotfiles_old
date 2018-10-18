@@ -24,12 +24,12 @@ Disable the useless cruft at the top of the screen
 ** Show matching parenthesis
 Shows matching parenthesis  
 #+BEGIN_SRC emacs-lisp
-(require 'paren)
-(set-face-background 'show-paren-match (face-background 'default))
-(set-face-foreground 'show-paren-match "#def")
-(set-face-attribute 'show-paren-match nil :weight 'extra-bold)
-(setq show-paren-delay 0)
-(show-paren-mode)
+  ;; (require 'paren)
+  ;; (set-face-background 'show-paren-match (face-background 'default))
+  ;; (set-face-foreground 'show-paren-match "#def")
+  ;; (set-face-attribute 'show-paren-match nil :weight 'extra-bold)
+  ;; (setq show-paren-delay 0)
+  ;; (show-paren-mode)
 #+END_SRC
    
 ** Show columns
@@ -99,6 +99,14 @@ my projects. Instead, store them in =/tmp=!
 (setq auto-save-file-name-transforms
     `((".*" ,temporary-file-directory t)))
 #+END_SRC
+** Customize the terminal
+Use fish shell in ansi-term
+#+BEGIN_SRC emacs-lisp
+(defadvice ansi-term (before force-bash)
+    (interactive '("/usr/bin/fish")))
+(ad-activate 'ansi-term)
+#+END_SRC
+
 * Package Repo Config
 ** Repo Location
 Let's start by configuring the repositories
@@ -509,7 +517,15 @@ company-quickhelp shows documentation popups
 when idling on a completion candidate.
 #+BEGIN_SRC emacs-lisp
 (use-package company
+    :preface
+    (defun foltz-company-backend-with-yas (backend)
+        (append (list backend)
+                '(:with company-yasnippet)))
+    (defun foltz-add-company-backend (backend)
+        (add-to-list 'company-backends 
+                     (foltz-company-backend-with-yas backend)))
     :hook (prog-mode . company-mode)
+    :hook (cdlatex-mode . company-mode)
     :general
     (:keymaps 'company-active-map
      "C-SPC" 'company-abort)
@@ -539,11 +555,10 @@ when idling on a completion candidate.
 *** prettify-symbols-mode
 Built into emacs since 24.1
 #+BEGIN_SRC emacs-lisp
-(add-hook 'prog-mode-hook 'prettify-symbols-mode)
+(add-hook 'python-mode-hook 'prettify-symbols-mode)
 (add-hook 'python-mode-hook (lambda ()
     (mapc (lambda (pair) (push pair prettify-symbols-alist))
         '(;; Syntax
-         ("not" .      #x00AC)
          ("in" .       #x2208)
          ("not in" .   #x2209)
          ("return" .   #x27fc)
@@ -558,7 +573,7 @@ Built into emacs since 24.1
 #+END_SRC
 
 ** Debugging
-[Realgud](https://github.com/realgud/realgud) is a modular frontend for many debuggers
+[[https://github.com/realgud/realgud][Realgud]] is a modular frontend for many debuggers
 #+BEGIN_SRC emacs-lisp
 (use-package realgud
     :commands 
@@ -570,10 +585,25 @@ Built into emacs since 24.1
 #+END_SRC
 
 ** Syntax checking
+*** Flycheck
 Flycheck does syntax highlighting in a few languages
 #+BEGIN_SRC emacs-lisp
 (use-package flycheck
     :hook (prog-mode . flycheck-mode))
+#+END_SRC
+
+*** Column 80 Highlight
+Add a hotkey for highlighting column 80
+and activate it in =prog-mode=
+#+BEGIN_SRC emacs-lisp
+(use-package fill-column-indicator
+    :init
+    (setq fci-rule-use-dashes t)
+    (setq fci-rule-column 80)
+    :general
+    (foltz-major-def
+        :keymaps 'prog-mode-map
+        "l" 'fci-mode))
 #+END_SRC
 
 ** Snippets
@@ -612,11 +642,12 @@ Projectile provides project-level features like
 make shortcuts and file switching
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
-    :bind-keymap
     :general
     (foltz-leader-def
         :states 'normal
-        "p" '(:keymap projectile-command-map)))
+        "p" '(:keymap projectile-command-map))
+    :custom
+    (projectile-project-search-path '("~/Documents/dev")))
 #+END_SRC
 ** Languages
 *** Fish
@@ -636,9 +667,9 @@ Jedi for autocompletion sources
 #+BEGIN_SRC emacs-lisp
 (use-package company-jedi
     :init
-    (defun foltz-add-python-company-backend () 
-        (add-to-list 'company-backends 'company-jedi))
-    :hook (python-mode . foltz-add-python-company-backend))
+    (defun foltz-add-company-python-backend ()
+        (foltz-add-company-backend 'company-jedi))
+    :hook (python-mode . foltz-add-company-python-backend))
 #+END_SRC
 
 *** Javascript
@@ -665,9 +696,9 @@ Company integration is done with company-web
     
 (use-package company-web
     :init
-    (defun foltz-add-web-company-backend ()
-        (add-to-list 'company-backends 'company-web))
-    :hook (web-mode . foltz-add-web-company-backend))
+    (defun foltz-add-company-web-backend ()
+        (foltz-company-add-backend 'company-web))
+    :hook (web-mode . foltz-add-company-web-backend))
 #+END_SRC
 
 *** JSON
@@ -699,6 +730,10 @@ company-auctex for completion.
 (use-package tex
     :defer t
     :ensure auctex
+    :general
+    (foltz-major-def
+        :keymaps 'TeX-mode-map
+        "e" 'TeX-command-run-all)
     :custom
     (TeX-auto-save t))
     
@@ -708,9 +743,18 @@ company-auctex for completion.
 (use-package company-auctex
     :pin melpa
     :init
-    (defun foltz-add-auctex-company-backend ()
-        (add-to-list 'company-backends 'company-auctex))
-    :hook (LaTeX-mode . foltz-add-auctex-company-backend))
+    (defun foltz-add-company-auctex-backend ()
+        (foltz-add-company-backend 'company-auctex))
+    :hook (LaTeX-mode . foltz-add-company-auctex-backend))
+
+(use-package company-math
+    :init
+    (defun foltz-add-company-math-backends ()
+        (foltz-add-company-backend 'company-math-symbols-latex)
+        (foltz-add-company-backend 'company-math-symbols-unicode)
+        (foltz-add-company-backend 'company-latex-commands))
+    :hook ((cdlatex-mode . foltz-add-company-math-backends)
+           (TeX-mode . foltz-add-company-math-backends)))
 #+END_SRC
 
 *** C/C++
@@ -726,9 +770,9 @@ company-irony for company integration
 
 (use-package company-irony
     :init
-    (defun foltz-add-irony-company-backend ()
-        (add-to-list 'company-backends 'company-irony))
-    :hook (irony-mode . foltz-add-irony-company-backend))
+    (defun foltz-add-company-irony-backend ()
+        (foltz-add-company-backend 'company-irony))
+    :hook (irony-mode . foltz-add-company-irony-backend))
 
 (use-package flycheck-irony
     :hook (irony-mode . flycheck-irony-setup))
