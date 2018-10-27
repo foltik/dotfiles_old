@@ -378,7 +378,88 @@ It also needs icon fonts, installed with =M-x all-the-icons-install-fonts=
     (neo-theme (if (display-graphic-p) 'icons 'arrow)))
 #+END_SRC
 ** Organization
-*** org-mode
+*** Capture Templates
+All of my capture templates, from tasks to bookmarks.
+**** Refile Targets
+Goodize the refiling targets to allow moving to subtrees
+#+BEGIN_SRC emacs-lisp
+(defun foltz-org-capture-refile ()
+    (interactive)
+    (setq-local org-refile-targets '((nil :maxlevel . 5)))
+    (setq-local org-refile-use-outline-path t)
+    (org-refile))
+#+END_SRC
+**** Tasks
+#+BEGIN_SRC emacs-lisp
+(setq foltz-org-capture-task-templates '(
+    ("t" "Todo")
+    ("tg" "General" entry
+        (file+headline "notes.org" "Todo")
+        "** %^{todo}\nNotes: %^{notes}\n")
+    ("tt" "General (Date)" entry
+        (file+olp+datetree "notes.org")
+        "*** TODO %^{todo}\nNotes: %^{notes}\nDue: %^t\n")
+    ("tT" "General (Date+Time)" entry
+        (file+olp+datetree "notes.org")
+        "*** TODO %^{todo}\nNotes: %^{notes}\nDue: %^T\n")
+    ("ts" "School (Date)" entry
+        (file+olp+datetree "notes.org")
+        "*** TODO %^{todo}\nClass: %^{class}\nNotes: %^{notes}\nDue: %^t\n")
+    ("tS" "School (Date+Time)" entry
+        (file+olp+datetree "notes.org")
+        "*** TODO %^{todo}\nClass: %^{class}\nDue: %^T\n")))
+#+END_SRC
+
+**** Bookmarks
+#+BEGIN_SRC emacs-lisp
+(setq foltz-org-capture-bookmark-templates '(
+    ("b" "Bookmark" entry
+        (file+headline "links.org" "Unsorted Links")
+        "** [[%^{link}][%^{name}]]\nCreated: %U\nAbout: %^{description}\n")))
+#+END_SRC
+    
+**** Personal
+#+BEGIN_SRC emacs-lisp
+(setq foltz-org-capture-personal-templates '(
+    ("j" "Journal")
+    ("jj" "Journal Entry" entry
+        (file+olp+datetree "journal.org")
+        "**** Today's Events\n")
+    ("jt" "Thoughts" entry
+        (file+headline "notes.org" "Thoughts")
+        "** %^{summary} %U\n\
+        %U\n")
+    ("jd" "Dream Journal Entry" entry
+        (file+olp+datetree "dreams.org")
+        "**** Dream\n")))
+#+END_SRC
+
+**** All
+Tie it all together.
+#+BEGIN_SRC emacs-lisp
+(setq foltz-org-capture-templates
+    (append
+        foltz-org-capture-task-templates
+        foltz-org-capture-personal-templates
+        foltz-org-capture-bookmark-templates))
+#+END_SRC
+*** Structure Templates
+Defines expansions with =<= followed by a string in org-mode.
+**** Source Blocks
+#+BEGIN_SRC emacs-lisp
+(setq foltz-org-source-structure-templates '(
+    ("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC")))
+#+END_SRC
+
+**** All
+Tie it all together.
+#+BEGIN_SRC emacs-lisp
+(setq foltz-org-structure-templates
+    (append
+        foltz-org-source-structure-templates))
+#+END_SRC
+
+*** Org-mode
 Keep org-mode up to date straight from the cow's utters.
 If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]].
 #+BEGIN_SRC emacs-lisp
@@ -386,11 +467,6 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
     :pin org
     :mode ("\\.org\\'" . org-mode)
     :hook (org-mode . org-indent-mode)
-
-    :init   
-    ; <el expands to an emacs lisp source block
-    (add-to-list 'org-structure-template-alist 
-        '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
 
     :general
     (foltz-major-def
@@ -407,8 +483,7 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
         "c" 'org-capture
         "l" 'org-store-link
         "b" 'org-switchb)
-        
-        
+    
     :custom
     (org-directory "~/Documents/org")
     (org-agenda-files '("~/Documents/org/"))
@@ -417,25 +492,11 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
     (org-src-window-setup 'current-window "Edit source code in the current window")
     (org-src-fontify-natively t "Highlight syntax in source blocks")
     (org-latex-to-pdf-process '("latexmk -f pdf %f") "Use pdflatex for export")
-    (org-capture-templates
-    '(("j" "Journal entry" entry
-        (file+olp+datetree "journal.org")
-        ("**** Happenings of today"))
-     ("t" "Todo" entry
-        (file+olp+datetree "notes.org")
-        "*** TODO %^{Thing to do}\nDEADLINE: %t\n")
-     ("T" "Thoughts" entry
-        (file+headline "notes.org" "Thoughts")
-        "** %^{Summary} %t :thoughts:\n")
-     ("s" "School-related task" entry
-        (file+datetree+prompt "school.org")
-        "*** TODO %^{What needs be done}\n DEADLINE: %t\n")
-     ("d" "Dream Journal" entry
-        (file+olp+datetree "dreams.org")
-        "**** Dream\n")
-     ("m" "Bookmark" entry
-        (file+headline "links.org" "Unsorted sites")
-        "[[%^{link}][%^{description}]]\n"))))
+    (org-capture-templates foltz-org-capture-templates)
+    (org-structure-template-alist 
+        (append 
+            org-structure-template-alist 
+            foltz-org-structure-templates)))
 #+END_SRC
 
 *** Pretty org-mode bullets
@@ -464,8 +525,11 @@ emacs operations.
         "b" 'ivy-switch-buffer
         "v" 'ivy-push-view
         "V" 'ivy-pop-view
-        "k" 'foltz-kill-curr-buffer
-        "K" 'foltz-kill-all-buffers)
+        "c" 'foltz-kill-curr-buffer
+        "C" 'foltz-kill-all-buffers)
+    (:keymaps 'org-capture-mode-map
+     :states 'normal
+     "C-c C-w" 'foltz-org-capture-refile)
 
     :custom
     (ivy-use-virtual-buffers t)
