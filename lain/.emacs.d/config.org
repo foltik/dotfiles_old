@@ -710,7 +710,22 @@ Projectile provides project-level features like
 make shortcuts and file switching
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
+    :init
+    (defun foltz-projectile-neotree () "Open NeoTree in the project root"
+        (interactive)
+        (let
+            ((project-dir (projectile-project-root))
+             (file-name   (buffer-file-name)))
+        (neotree-toggle)
+        (if project-dir
+            (if (neo-global--window-exists-p)
+                (progn
+                    (neotree-dir project-dir)
+                    (neotree-find file-name))))))
+
     :general
+    (:keymaps 'projectile-command-map
+     "t" 'foltz-projectile-neotree)
     (foltz-leader-def
         :states 'normal
         "p" '(:keymap projectile-command-map))
