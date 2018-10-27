@@ -473,16 +473,12 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
         :keymaps 'org-mode-map
         "e" 'org-export-dispatch
         "a" 'org-attach)
-    (foltz-major-def
-        :keymaps 'org-capture-mode-map
-        "c" 'org-capture-finalize
-        "w" 'org-capture-refile
-        "k" 'org-capture-kill)
     (foltz-org-def
         "a" 'org-agenda
         "c" 'org-capture
         "l" 'org-store-link
-        "b" 'org-switchb)
+        "b" 'org-switchb
+        "r" 'foltz-org-capture-refile)
     
     :custom
     (org-directory "~/Documents/org")
