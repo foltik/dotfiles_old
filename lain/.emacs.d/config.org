@@ -395,19 +395,19 @@ Goodize the refiling targets to allow moving to subtrees
     ("t" "Todo")
     ("tg" "General" entry
         (file+headline "notes.org" "Todo")
-        "** %^{todo}\nNotes: %^{notes}\n")
+        "** %^{todo}\nNotes: %?\n")
     ("tt" "General (Date)" entry
         (file+olp+datetree "notes.org")
-        "*** TODO %^{todo}\nNotes: %^{notes}\nDue: %^t\n")
+        "*** TODO %^{todo}\nDue: %^t\nNotes: %?\n")
     ("tT" "General (Date+Time)" entry
         (file+olp+datetree "notes.org")
-        "*** TODO %^{todo}\nNotes: %^{notes}\nDue: %^T\n")
+        "*** TODO %^{todo}\nDue: %^T\nNotes: %?\n")
     ("ts" "School (Date)" entry
         (file+olp+datetree "notes.org")
-        "*** TODO %^{todo}\nClass: %^{class}\nNotes: %^{notes}\nDue: %^t\n")
+        "*** TODO %^{todo}\nDue: %^t\nClass: %^{class}\nNotes: %?\n")
     ("tS" "School (Date+Time)" entry
         (file+olp+datetree "notes.org")
-        "*** TODO %^{todo}\nClass: %^{class}\nDue: %^T\n")))
+        "*** TODO %^{todo}\nDue: %^T\nClass: %^{class}\nNotes: %?\n")))
 #+END_SRC
 
 **** Bookmarks
@@ -415,7 +415,7 @@ Goodize the refiling targets to allow moving to subtrees
 (setq foltz-org-capture-bookmark-templates '(
     ("b" "Bookmark" entry
         (file+headline "links.org" "Unsorted Links")
-        "** [[%^{link}][%^{name}]]\nCreated: %U\nAbout: %^{description}\n")))
+        "** [[%^{link}][%^{name}]]\nCreated: %U\nAbout: %^{description}%?\n")))
 #+END_SRC
     
 **** Personal
@@ -424,14 +424,13 @@ Goodize the refiling targets to allow moving to subtrees
     ("j" "Journal")
     ("jj" "Journal Entry" entry
         (file+olp+datetree "journal.org")
-        "**** Today's Events\n")
+        "**** Today's Events\n%?")
     ("jt" "Thoughts" entry
         (file+headline "notes.org" "Thoughts")
-        "** %^{summary} %U\n\
-        %U\n")
+        "** %^{summary}\n%U\n%?")
     ("jd" "Dream Journal Entry" entry
         (file+olp+datetree "dreams.org")
-        "**** Dream\n")))
+        "**** Dream\n%?")))
 #+END_SRC
 
 **** All
@@ -466,7 +465,8 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
 (use-package org
     :pin org
     :mode ("\\.org\\'" . org-mode)
-    :hook (org-mode . org-indent-mode)
+    :hook ((org-mode . org-indent-mode)
+           (org-capture-mode . evil-insert-state))
 
     :general
     (foltz-major-def
