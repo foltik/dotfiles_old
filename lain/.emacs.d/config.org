@@ -371,6 +371,14 @@ It also needs icon fonts, installed with =M-x all-the-icons-install-fonts=
     :after all-the-icons
     :commands neotree-toggle
     :general
+    (:keymaps 'neotree-mode-map
+     :states 'normal
+     "RET" 'neotree-enter
+     "TAB" 'neotree-quick-look
+     "q"   'neotree-hide
+     "g"   'neotree-refresh
+     "A"   'neotree-stretch-toggle
+     "H"   'neotree-hidden-file-toggle)
     (foltz-leader-def
         :states 'normal
         "t" 'neotree-toggle)
