@@ -397,10 +397,11 @@ Goodize the refiling targets to allow moving to subtrees
     (setq-local org-refile-use-outline-path t)
     (org-refile))
 #+END_SRC
+
 **** Tasks
 #+BEGIN_SRC emacs-lisp
-(setq foltz-org-capture-task-templates '(
-    ("t" "Todo")
+(setq foltz-org-capture-task-templates 
+  '(("t" "Todo")
     ("tg" "General" entry
         (file+headline "notes.org" "Todo")
         "** %^{todo}\nNotes: %?\n")
@@ -420,16 +421,16 @@ Goodize the refiling targets to allow moving to subtrees
 
 **** Bookmarks
 #+BEGIN_SRC emacs-lisp
-(setq foltz-org-capture-bookmark-templates '(
-    ("b" "Bookmark" entry
+(setq foltz-org-capture-bookmark-templates 
+  '(("b" "Bookmark" entry
         (file+headline "links.org" "Unsorted Links")
         "** [[%^{link}][%^{name}]]\nCreated: %U\nAbout: %^{description}%?\n")))
 #+END_SRC
     
 **** Personal
 #+BEGIN_SRC emacs-lisp
-(setq foltz-org-capture-personal-templates '(
-    ("j" "Journal")
+(setq foltz-org-capture-personal-templates 
+  '(("j" "Journal")
     ("jj" "Journal Entry" entry
         (file+olp+datetree "journal.org")
         "**** Today's Events\n%?")
@@ -441,6 +442,14 @@ Goodize the refiling targets to allow moving to subtrees
         "**** Dream\n%?")))
 #+END_SRC
 
+**** Protocol
+#+BEGIN_SRC emacs-lisp
+(setq foltz-org-capture-protocol-templates 
+    '(("w" "Website" entry
+        (file+headline "sites.org" "Unsorted Sites")
+        "** [[%:link][%:description%?]]\nCreated: %U\nAbout: %^{description}%?\n%:initial")))
+#+END_SRC
+
 **** All
 Tie it all together.
 #+BEGIN_SRC emacs-lisp
@@ -448,8 +457,10 @@ Tie it all together.
     (append
         foltz-org-capture-task-templates
         foltz-org-capture-personal-templates
-        foltz-org-capture-bookmark-templates))
+        foltz-org-capture-bookmark-templates
+        foltz-org-capture-protocol-templates))
 #+END_SRC
+
 *** Structure Templates
 Defines expansions with =<= followed by a string in org-mode.
 **** Source Blocks
@@ -508,6 +519,15 @@ Make bullets look choice
 #+BEGIN_SRC emacs-lisp
 (use-package org-bullets
     :hook (org-mode . org-bullets-mode))
+#+END_SRC
+
+*** Org-protocol
+Allows interception of calls to =emacsclient= to trigger custom actions.
+#+BEGIN_SRC emacs-lisp
+(use-package org-protocol
+    :pin org)
+(use-package org-protocol-capture
+    :pin org)
 #+END_SRC
 
 ** Fuzzy Matching
