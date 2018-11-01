@@ -521,15 +521,6 @@ Make bullets look choice
     :hook (org-mode . org-bullets-mode))
 #+END_SRC
 
-*** Org-protocol
-Allows interception of calls to =emacsclient= to trigger custom actions.
-#+BEGIN_SRC emacs-lisp
-(use-package org-protocol
-    :pin org)
-(use-package org-protocol-capture
-    :pin org)
-#+END_SRC
-
 ** Fuzzy Matching
 Ivy, swiper, and counsel all provide fuzzy-matching on different
 emacs operations.
@@ -610,8 +601,10 @@ when idling on a completion candidate.
         (append (list backend)
                 '(:with company-yasnippet)))
     (defun foltz-add-company-backend (backend)
-        (add-to-list 'company-backends 
-                     (foltz-company-backend-with-yas backend)))
+        (if (member (foltz-company-backend-with-yas backend) company-backends)
+            backend
+            (add-to-list 'company-backends 
+                (foltz-company-backend-with-yas backend))))
     :hook (prog-mode . company-mode)
     :hook (cdlatex-mode . company-mode)
     :general
