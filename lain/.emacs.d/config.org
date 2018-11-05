@@ -674,9 +674,7 @@ Built into emacs since 24.1
 #+BEGIN_SRC emacs-lisp
 (use-package rmsbolt
     :pin melpa
-    :commands
-    (rmsbolt-starter
-     rmsbolt-mode))
+    :commands rmsbolt-mode)
 #+END_SRC
 ** Syntax checking
 *** Flycheck
@@ -867,9 +865,9 @@ company-auctex for completion.
 #+END_SRC
 
 *** C/C++
+**** Irony
 Irony handles enhanced C/C++ operations powered by clang
 company-irony for company integration
-
 #+BEGIN_SRC emacs-lisp
 (use-package irony
     :after counsel
@@ -886,5 +884,10 @@ company-irony for company integration
 (use-package flycheck-irony
     :hook (irony-mode . flycheck-irony-setup))
 #+END_SRC
-
-
+**** Hotkeys
+#+BEGIN_SRC emacs-lisp
+(foltz-major-def
+    :keymaps '(c++-mode-map c-mode-map)
+    "r" 'rmsbolt-mode
+    "c" 'rmsbolt-compile)
+#+END_SRC
