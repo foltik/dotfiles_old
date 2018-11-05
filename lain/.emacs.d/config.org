@@ -508,10 +508,7 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
     (org-src-fontify-natively t "Highlight syntax in source blocks")
     (org-latex-to-pdf-process '("latexmk -f pdf %f") "Use pdflatex for export")
     (org-capture-templates foltz-org-capture-templates)
-    (org-structure-template-alist 
-        (append 
-            org-structure-template-alist 
-            foltz-org-structure-templates)))
+    (org-structure-template-alist (append org-structure-template-alist foltz-org-structure-templates)))
 #+END_SRC
 
 *** Pretty org-mode bullets
@@ -862,11 +859,28 @@ company-auctex for completion.
            (TeX-mode . foltz-add-company-math-backends)))
 #+END_SRC
 **** cdlatex
+***** Environment
+#+BEGIN_SRC emacs-lisp
+(setq foltz-cdlatex-envs nil)
+#+END_SRC
+***** Commands
+#+BEGIN_SRC emacs-lisp
+(setq foltz-cdlatex-commands nil)
+#+END_SRC
+***** Math Symbols
+#+BEGIN_SRC emacs-lisp
+(setq foltz-cdlatex-symbols
+  '((?I ("\\infty"))))
+#+END_SRC
+***** cdlatex
 cdlatex adds better TeX-specific template expansions and other niceties.
 #+BEGIN_SRC emacs-lisp
 (use-package cdlatex
-    :hook (LaTeX-mode . cdlatex-mode))
-
+    :hook (LaTeX-mode . cdlatex-mode)
+    :custom
+    (cdlatex-env-alist foltz-cdlatex-envs)
+    (cdlatex-command-alist foltz-cdlatex-commands)
+    (cdlatex-math-symbol-alist foltz-cdlatex-symbols))
 #+END_SRC
 *** C/C++
 **** Irony
