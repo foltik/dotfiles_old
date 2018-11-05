@@ -596,15 +596,20 @@ company-quickhelp shows documentation popups
 when idling on a completion candidate.
 #+BEGIN_SRC emacs-lisp
 (use-package company
-    :preface
+    :init
     (defun foltz-company-backend-with-yas (backend)
-        (append (list backend)
-                '(:with company-yasnippet)))
-    (defun foltz-add-company-backend (backend)
-        (if (member (foltz-company-backend-with-yas backend) company-backends)
+        (if (and (listp backend) (member 'company-yasnippet backend))
             backend
-            (add-to-list 'company-backends 
-                (foltz-company-backend-with-yas backend))))
+            (append
+                (if (consp backend)
+                    backend
+                    (list backend))
+                '(:with company-yasnippet))))
+    (defun foltz-add-company-backend (backend)
+        (let ((backend-with-yas (foltz-company-backend-with-yas backend)))
+        (if (member backend-with-yas company-backends)
+            backend
+            (add-to-list 'company-backends backend-with-yas))))
     :hook (prog-mode . company-mode)
     :hook (cdlatex-mode . company-mode)
     :general
@@ -653,7 +658,8 @@ Built into emacs since 24.1
          ("False" .    #x1d53d)))))
 #+END_SRC
 
-** Debugging
+** Debugging and Disassembly
+*** Realgud
 [[https://github.com/realgud/realgud][Realgud]] is a modular frontend for many debuggers
 #+BEGIN_SRC emacs-lisp
 (use-package realgud
@@ -664,7 +670,14 @@ Built into emacs since 24.1
      realgud:pdb 
      realgud:trepan3k))
 #+END_SRC
-
+*** RMSBolt
+#+BEGIN_SRC emacs-lisp
+(use-package rmsbolt
+    :pin melpa
+    :commands
+    (rmsbolt-starter
+     rmsbolt-mode))
+#+END_SRC
 ** Syntax checking
 *** Flycheck
 Flycheck does syntax highlighting in a few languages
@@ -793,7 +806,7 @@ Company integration is done with company-web
 (use-package company-web
     :init
     (defun foltz-add-company-web-backend ()
-        (foltz-company-add-backend 'company-web))
+        (foltz-add-company-backend 'company-web))
     :hook (web-mode . foltz-add-company-web-backend))
 #+END_SRC
 
