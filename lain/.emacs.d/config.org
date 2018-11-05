@@ -404,7 +404,7 @@ Goodize the refiling targets to allow moving to subtrees
   '(("t" "Todo")
     ("tg" "General" entry
         (file+headline "notes.org" "Todo")
-        "** %^{todo}\nNotes: %?\n")
+        "** TODO %^{todo}\nNotes: %?\n")
     ("tt" "General (Date)" entry
         (file+olp+datetree "notes.org")
         "*** TODO %^{todo}\nDue: %^t\nNotes: %?\n")
@@ -830,6 +830,7 @@ For editing PKGBUILD files
 #+END_SRC
 
 *** LaTeX
+**** AUCTeX
 AUCTeX is a major mode for editing tex,
 CDLaTeX adds some minor niceities to it.
 company-auctex for completion.
@@ -844,9 +845,6 @@ company-auctex for completion.
     :custom
     (TeX-auto-save t))
     
-(use-package cdlatex
-    :hook (LaTeX-mode . cdlatex-mode))
-
 (use-package company-auctex
     :pin melpa
     :init
@@ -863,7 +861,13 @@ company-auctex for completion.
     :hook ((cdlatex-mode . foltz-add-company-math-backends)
            (TeX-mode . foltz-add-company-math-backends)))
 #+END_SRC
+**** cdlatex
+cdlatex adds better TeX-specific template expansions and other niceties.
+#+BEGIN_SRC emacs-lisp
+(use-package cdlatex
+    :hook (LaTeX-mode . cdlatex-mode))
 
+#+END_SRC
 *** C/C++
 **** Irony
 Irony handles enhanced C/C++ operations powered by clang
