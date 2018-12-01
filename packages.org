@@ -23,5 +23,6 @@ core ncmpcpp
 core beets
 
 * Terminal
-core rxvt-unicode
+core alacritty
+core alacritty-terminfo
 core fish
