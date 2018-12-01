@@ -1,0 +1,8 @@
+[Unit]
+Description=Periodically run wallpaper service
+
+[Timer]
+OnUnitActiveSec=30min
+
+[Install]
+WantedBy=timers.target

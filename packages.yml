@@ -1,0 +1,39 @@
+Base:
+  - fish
+  - systemd:
+      source: none
+
+Terminal:
+  - alacritty
+  - alacritty-terminfo
+
+Editors:
+  - emacs:
+      config: .emacs.d
+      user-units:
+        - emacs.service
+  - neovim
+
+System Tools:
+  - networkmanager
+
+Window Manager:
+  - ppi3-git:
+      source: aur
+
+Desktop Tools:
+  - python-pywal:
+      script: wal.fish
+      config: .config/wal
+      user-units:
+        - wallpaper.service
+        - wallpaper.timer
+  - rofi
+
+Fonts:
+  - ttf-dejavu
+  - otf-fira-code
+  - adobe-source-han-sans-jp-fonts
+  - all-the-icons:
+      source: git
+      url: https://github.com/domtronn/all-the-icons.el

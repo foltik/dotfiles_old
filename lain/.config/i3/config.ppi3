@@ -1,0 +1,122 @@
+###############################################################################
+#                                VARIABLES                                    #
+###############################################################################
+
+#!nobracket
+
+set $mod Mod1   # Alt key
+set $term alacritty
+
+set $mv 20px    # amount to resize windows (also used for how far to
+set $mvppt 2ppt #   move floating windows with mod+shift+hjkl)
+
+font pango:SauceCodePro Nerd Font 10
+floating_modifier $mod
+focus_follows_mouse no
+force_focus_wrapping yes
+
+###############################################################################
+#                                KEYBINDS                                     #
+###############################################################################
+
+group "default" {
+
+# launching
+bindsym $mod+backslash exec $term
+bindsym $mod{,+Shift}+d exec rofi \
+    -show {drun,run}
+
+# window management
+bindsym $mod{2|,+Shift}+{1|h,j,k,l,\        # focused window manipulation,
+    Left,Down,Up,Right} {2|focus,move} \    #   vikeys and arrow key support
+    {1|left,down,up,right}{2|, $mv}
+
+bindsym $mod+{equal,minus} split {h,v}     # horizontal and vertical split
+bindsym $mod+f fullscreen toggle            # fullscreen
+
+bindsym $mod+{q,w,e} \                      # change container layout
+    layout {stacking,tabbed,toggle split}
+
+bindsym $mod{,+Shift}+semicolon \           # floating toggle and focus
+    {focus mode_,floating }toggle
+
+bindsym $mod+{a,s} focus {parent,child}	    # focus parent/child
+
+bindsym $mod+Shift+q kill
+
+# workspaces
+bindsym $mod{2|,+Shift}+{1|1..9,0} \
+    {2|,move container to }\
+    workspace number {1|1..10}
+
+# reload/exit
+# restarting/exiting
+bindsym $mod+Shift+c \                      # run ppi3 and reload config
+    exec ppi3 ~/.config/i3/config.ppi3 ~/.config/i3/config \
+    && i3-msg reload
+bindsym $mod+Shift+r restart 
+bindsym $mod+Shift+e exit
+
+}
+
+# dual-monitor setup
+bindsym $mod{,+Shift}+slash {focus,move} \    # other monitor
+  output right
+bindsym $mod+Shift+equal {{?\\}}            # shoot all workspaces over to my
+  workspace number {2..10}; move \          #   large monitor except 1
+    workspace to output HDMI2; {{?\\}}
+  nop
+bindsym $mod+period move workspace to \      # toggle workspace between monitors
+output left
+
+###############################################################################
+#                                    MODES                                    #
+###############################################################################
+
+mode "resize" {
+    bindsym {h,j,k,l,Left,Down,Up,Right} resize \
+        {shrink width,grow height,shrink height,grow width} $mv or $mvppt
+    bindsym Shift+{h,j,k,l,Left,Down,Up,Right} resize \
+        {shrink width,grow height,shrink height,grow width} 1px or 1ppt
+
+    bindsym {Return,Escape,space,$mod+r} mode "default"
+}
+bindsym $mod+r mode "resize"
+
+###############################################################################
+#                         COLORS AND APPEARANCE                               #
+###############################################################################
+
+gaps inner 12
+gaps outer 0
+smart_gaps on
+
+default_border pixel 2
+default_floating_border none
+hide_edge_borders both
+
+set_from_resource $color{1|0..7} color{1|0..7}
+set_from_resource $fg foreground
+set_from_resource $bg background
+
+#client.focused          $color2 $color2 $fg
+#client.focused_inactive $color3 $color3 $fg
+#client.unfocused        $color3 $color3 $fg
+#client.urgent           $color2 $color2 $fg
+#client.placeholder      $color2 $color2 $fg
+client.background       $color2
+
+###############################################################################
+#                                    STARTUP                                  #
+###############################################################################
+
+exec --no-startup-id "setxkbmap -option caps:swapescape"
+exec --no-startup-id "systemctl --user start ch-wall"
+
+exec --no-startup-id "compton --config ~/.config/compton/config -b"
+
+exec --no-startup-id "polybar top"
+exec --no-startup-id "polybar bottom"
+
+exec --no-startup-id "ibus-daemon --xim"
+
