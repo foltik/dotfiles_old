@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import curses
 from curses import panel
 
@@ -76,27 +74,3 @@ class Menu(BaseMenu):
 
         self.should_exit = False
         self.down()
-    
-class App(object):
-    def __init__(self, stdscreen):
-        self.screen = stdscreen
-        curses.curs_set(0)
-
-        submenu_items = [
-            ('beep', curses.beep),
-            ('flash', curses.flash)
-        ]
-        submenu = Menu(self.screen, submenu_items)
-
-        main_menu_items = [
-            ('beep', curses.beep),
-            ('flash', curses.flash),
-            ('submenu', submenu.display)
-        ]
-        main_menu = Menu(self.screen, main_menu_items)
-        main_menu.display()
-
-if __name__ == '__main__':
-    curses.wrapper(App)
-
-        
