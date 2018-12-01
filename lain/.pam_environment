@@ -1,2 +1,6 @@
+EDITOR          DEFAULT="nvim"
 SSH_AGENT_PID   DEFAULT=
 SSH_AUTH_SOCK   DEFAULT="${XDG_RUNTIME_DIR}/gnupg/S.gpg-agent.ssh"
+GTK_IM_MODULE   DEFAULT="ibus"
+XMODIFIERS      DEFAULT="@im=ibus"
+QT_IM_MODULE    DEFAULT="ibus"
