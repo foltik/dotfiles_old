@@ -882,6 +882,11 @@ cdlatex adds better TeX-specific template expansions and other niceties.
     (cdlatex-command-alist foltz-cdlatex-commands)
     (cdlatex-math-symbol-alist foltz-cdlatex-symbols))
 #+END_SRC
+*** Rust
+#+BEGIN_SRC emacs-lisp
+(use-package rust-mode
+  :mode "\\.rs\\'")
+#+END_SRC
 *** C/C++
 **** Irony
 Irony handles enhanced C/C++ operations powered by clang
