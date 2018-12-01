@@ -6,6 +6,7 @@ Base:
 Terminal:
   - alacritty
   - alacritty-terminfo
+  - autojump
 
 Editors:
   - emacs:
