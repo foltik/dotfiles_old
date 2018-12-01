@@ -1,4 +1,5 @@
 ### Environment Variables ###
+set -U fish_greeting
 set -U fish_user_paths ~/.local/bin
 # Use all cores for make by default
 set -gx MAKEFLAGS -j(nproc)
