@@ -1,0 +1,8 @@
+[user]
+	email = jack@foltz.io
+	name = Jack Foltz
+	signingkey = 440C74D9941B9465F618BD8FD1F0331758D1F29A
+[commit]
+	gpgsign = true
+[core]
+	autocrlf = input
