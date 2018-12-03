@@ -6,4 +6,4 @@ Type=simple
 ExecStart=polybar top
 
 [Install]
-WantedBy=i3@.target
+WantedBy=i3@.service
