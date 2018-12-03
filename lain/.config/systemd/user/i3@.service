@@ -1,13 +1,13 @@
 [Unit]
 Description=i3 Window Manager
-After=x11@0.target
-Requisite=x11@0.target
+After=x11@%i.target
+Requisite=x11@%i.target
 
 [Service]
-Environment=DISPLAY=:0
+Environment=DISPLAY=:%i
 Type=simple
-ExecStart=/usr/bin/env bash -c 'exec 8>%t/x11-wm@0; exec i3'
+ExecStart=/usr/bin/env bash -c 'exec 8>%t/x11-wm@%i; exec i3'
 SyslogIdentifier=i3
 
 [Install]
-RequiredBy=x11@0.target
+RequiredBy=x11@%i.target
