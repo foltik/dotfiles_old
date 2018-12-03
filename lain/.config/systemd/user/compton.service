@@ -1,0 +1,9 @@
+[Unit]
+Description=X11 Compositor
+
+[Service]
+Type=forking
+ExecStart=compton --config /home/lain/.config/compton/config -b
+
+[Install]
+WantedBy=i3@.service

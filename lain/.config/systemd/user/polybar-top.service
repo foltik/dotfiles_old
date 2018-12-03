@@ -1,0 +1,9 @@
+[Unit]
+Description=Polybar Top
+
+[Service]
+Type=simple
+ExecStart=polybar top
+
+[Install]
+WantedBy=i3@.target
