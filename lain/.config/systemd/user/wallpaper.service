@@ -2,7 +2,7 @@
 Description=Load a random wallpaper and colorscheme
 
 [Service]
-Type=forking
+Type=oneshot
 ExecStart=/usr/bin/wal -i "/home/lain/Pictures/wallpapers" -a "85"
 
 [Install]
