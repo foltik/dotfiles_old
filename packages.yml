@@ -2,6 +2,10 @@ Base:
   - fish
   - systemd:
       source: none
+      user-units:
+        - i3@0
+        - xmodmap@0
+        - xresources@0
 
 Terminal:
   - alacritty
