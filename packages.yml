@@ -15,8 +15,6 @@ Terminal:
 Editors:
   - emacs:
       config: .emacs.d
-      user-units:
-        - emacs.service
   - neovim
 
 System Tools:
@@ -25,6 +23,7 @@ System Tools:
 Window Manager:
   - ppi3-git:
       source: aur
+  - compton:
 
 Desktop Tools:
   - python-pywal:
