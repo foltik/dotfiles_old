@@ -1,0 +1,9 @@
+[Unit]
+Description=IBus input daemon
+
+[Service]
+Type=simple
+ExecStart=ibus-daemon --xim
+
+[Install]
+WantedBy=i3@.service
