@@ -2,10 +2,10 @@ Base:
   - fish
   - systemd:
       source: none
-      user-units:
-        - i3@0
-        - xmodmap@0
-        - xresources@0
+      userunits:
+        - i3@0.service
+        - xmodmap@0.service
+        - xresources@0.service
 
 Terminal:
   - alacritty
@@ -23,13 +23,13 @@ System Tools:
 Window Manager:
   - ppi3-git:
       source: aur
-  - compton:
+  - compton
 
 Desktop Tools:
   - python-pywal:
       script: wal.fish
       config: .config/wal
-      user-units:
+      userunits:
         - wallpaper.service
         - wallpaper.timer
   - rofi
