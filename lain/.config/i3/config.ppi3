@@ -95,28 +95,24 @@ default_border pixel 2
 default_floating_border none
 hide_edge_borders both
 
-set_from_resource $color{1|0..7} color{1|0..7}
-set_from_resource $fg foreground
-set_from_resource $bg background
+set_from_resource $bg     color0
+set_from_resource $bg-alt color14
+set_from_resource $fg     color15
+set_from_resource $fg-alt color2
+set_from_resource $hl     color13
 
-#client.focused          $color2 $color2 $fg
-#client.focused_inactive $color3 $color3 $fg
-#client.unfocused        $color3 $color3 $fg
-#client.urgent           $color2 $color2 $fg
-#client.placeholder      $color2 $color2 $fg
-client.background       $color2
+# class                 #border
+client.focused          $fg-alt $bg $hl $fg-alt $hl
+client.focused_inactive $fg-alt $bg $fg $fg-alt $fg-alt
+client.unfocused        $fg-alt $bg $fg $fg-alt $fg-alt
+client.urgent           $fg-alt $bg $fg $fg-alt $fg-alt
+client.placeholder      $fg-alt $bg $fg $fg-alt $fg-alt
+client.background       $fg-alt $bg $fg $fg-alt $fg-alt
+
 
 ###############################################################################
 #                                    STARTUP                                  #
 ###############################################################################
 
-exec --no-startup-id "setxkbmap -option caps:swapescape"
-exec --no-startup-id "systemctl --user start ch-wall"
-
-exec --no-startup-id "compton --config ~/.config/compton/config -b"
-
-exec --no-startup-id "polybar top"
-exec --no-startup-id "polybar bottom"
-
-exec --no-startup-id "ibus-daemon --xim"
+exec --no-startup-id systemd-notify --ready
 

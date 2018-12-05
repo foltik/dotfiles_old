@@ -5,7 +5,8 @@ Requisite=x11@%i.target
 
 [Service]
 Environment=DISPLAY=:%i
-Type=simple
+Type=notify
+NotifyAccess=all
 ExecStart=/usr/bin/env bash -c 'exec 8>%t/x11-wm@%i; exec i3'
 SyslogIdentifier=i3
 
