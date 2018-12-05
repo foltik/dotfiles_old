@@ -27,6 +27,7 @@ trap "rm -f ${XDG_RUNTIME_DIR}/x11-wm@${DISPLAY:1:2}" EXIT
 # Fork a process that will exit once the pipe is closed
 cat < "${XDG_RUNTIME_DIR}/x11-wm@${DISPLAY:1:2}" &
 
+systemctl --user import-environment
 systemctl --user start "x11@${DISPLAY:1:2}.target" &
 # Wait for the pipe (window manager) to close
 wait
