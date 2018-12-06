@@ -1,31 +1,41 @@
 #!/bin/python
 import curses
-from lib.parse import Category, Package, parse
-from lib.menu import Menu
+import os
+from lib.parse import parse
+from lib.package import Category, Package
+from lib.menu import Menu, ChecklistMenu
 from lib.configure import configure
 
 categories = parse('packages.yml')
 
-def noop():
-    pass
+run_installer = False
+def run():
+    for category in [c for c in categories if c.enabled]:
+        for package in category.packages:
+            configure(package)
 
 class App:
     def __init__(self, stdscreen):
         self.screen = stdscreen
         curses.curs_set(0)
 
-        submenu_items = [
-            ('do stuff', noop)
-        ]
-        submenu = Menu(self.screen, submenu_items)
+        def exit_and_run():
+            global run_installer
+            run_installer = True
+            main_menu.exit()
 
-        main_menu_items = [
-            ('install', noop),
-            ('submenu', submenu.display)
-        ]
-        main_menu = Menu(self.screen, main_menu_items)
+        package_options_menu = Category.config_menu(self.screen, categories)
+
+        main_menu = Menu(self.screen, 'Main Menu', [
+            ('Package Options', package_options_menu.display),
+            ('Run Installer', exit_and_run)
+        ])
+
         main_menu.display()
 
 if __name__ == '__main__':
+    os.environ.setdefault('ESCDELAY', '0')
     curses.wrapper(App)
+    if run_installer:
+        run()
 
