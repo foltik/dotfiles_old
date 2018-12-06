@@ -7,6 +7,13 @@ Base:
         - xmodmap@0.service
         - xresources@0.service
 
+Command Line Tools:
+  - yay
+  - ripgrep
+
+System Tools:
+  - networkmanager
+
 Terminal:
   - alacritty
   - alacritty-terminfo
@@ -16,9 +23,6 @@ Editors:
   - emacs:
       config: .emacs.d
   - neovim
-
-System Tools:
-  - networkmanager
 
 Window Manager:
   - ppi3-git:
