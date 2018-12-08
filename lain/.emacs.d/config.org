@@ -104,6 +104,23 @@ Use fish shell in ansi-term
 (ad-activate 'ansi-term)
 #+END_SRC
 
+** Theme
+#+BEGIN_SRC emacs-lisp
+(defvar foltz-wal-theme-path "~/.cache/wal/colors.el")
+(defun foltz-apply-theme ()
+    (interactive)
+    (load-file foltz-wal-theme-path))
+
+(defun foltz-theme-callback (event)
+  (foltz-apply-theme))
+
+(if (file-exists-p foltz-wal-theme-path)
+    (progn
+       (require 'filenotify)
+       (file-notify-add-watch foltz-wal-theme-path '(change) 'foltz-theme-callback)
+       (foltz-apply-theme))
+    (load-theme spacemacs-dark))
+#+END_SRC
 * Package Repo Config
 ** Repo Location
 Let's start by configuring the repositories
