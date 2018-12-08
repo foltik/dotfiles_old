@@ -24,12 +24,9 @@ Disable the useless cruft at the top of the screen
 ** Show matching parenthesis
 Shows matching parenthesis  
 #+BEGIN_SRC emacs-lisp
-  ;; (require 'paren)
-  ;; (set-face-background 'show-paren-match (face-background 'default))
-  ;; (set-face-foreground 'show-paren-match "#def")
-  ;; (set-face-attribute 'show-paren-match nil :weight 'extra-bold)
-  ;; (setq show-paren-delay 0)
-  ;; (show-paren-mode)
+(require 'paren)
+(setq show-paren-delay 0)
+(show-paren-mode)
 #+END_SRC
    
 ** Show columns
