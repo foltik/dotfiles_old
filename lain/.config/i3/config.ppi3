@@ -22,8 +22,8 @@ force_focus_wrapping yes
 group "default" {
 
 # launching
-bindsym $mod+backslash exec $term
-bindsym $mod{,+Shift}+d exec rofi \
+bindsym $mod+backslash exec --no-startup-id $term
+bindsym $mod{,+Shift}+d exec --no-startup-id rofi \
     -show {drun,run}
 
 # window management
