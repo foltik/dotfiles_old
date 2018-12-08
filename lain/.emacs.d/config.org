@@ -712,7 +712,7 @@ Yasnippet adds support for custom snippets
 
 ** Git
 It's magic git!
-Keybinds [here](https://github.com/emacs-evil/evil-magit)
+Keybinds [[https://github.com/emacs-evil/evil-magit][here]]
 #+BEGIN_SRC emacs-lisp
 (use-package magit
     :general
