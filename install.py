@@ -57,7 +57,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Foltik's super cool dotfiles install script")
     parser.add_argument('packages', metavar='pkg', type=str, nargs='*')
     parser.add_argument('-a', '--all', dest='all', action='store_const', const=True,
-                        help='Run on all packages')
+                        help='run on all packages in packages.yml')
 
     actions = [
         ('-d', '--deploy', deploy.deploy, 'alias for -icsue'),
