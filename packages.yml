@@ -3,7 +3,7 @@ Base:
   - systemd:
       source: none
       config: none
-      userunits:
+      userunit:
         - i3@0.service
         - xmodmap@0.service
         - xresources@0.service
@@ -30,6 +30,7 @@ Editors:
 
 Window Manager:
   - i3-gaps:
+      alias: wal
       source: aur
       config: .config/i3/config.ppi3
   - ppi3-git:
@@ -38,9 +39,10 @@ Window Manager:
 
 Desktop Tools:
   - python-pywal:
+      alias: wal
       script: wal.fish
       config: .config/wal
-      userunits:
+      userunit:
         - wallpaper.service
         - wallpaper.timer
   - rofi
