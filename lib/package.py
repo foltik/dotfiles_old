@@ -20,9 +20,9 @@ class Package:
         # Install State
         self.enabled = True
         self.install = True
-        self.copy_config = True
+        self.export_config = True
         self.run_script = True
-        self.enable_units = True
+        self.export_units = True
 
         
     def __repr__(self):
@@ -32,26 +32,31 @@ class Package:
         if self.source == 'none':
             self.source = None
         
-        default_config = Path('lain/.config/' + self.name)
+        default_config = Path('.config/' + self.name)
         if hasattr(self, 'config'):
-            self.config = Path('lain/' + self.config)
-        elif default_config.is_dir():
+            if isinstance(self.config, list):
+                self.config = list(map(lambda c: Path(c), self.config))
+            elif self.config == 'none':
+                self.config = None
+            else:
+                self.config = Path(self.config)
+        elif (Path('lain') / default_config).is_dir():
             self.config = default_config
         else:
             self.config = None
         
-        default_script = Path('scripts/' + self.name + '.fish')
+        default_script = Path(self.name + '.fish')
         if hasattr(self, 'script'):
-            self.script = Path('scripts/' + self.script)
-        elif default_script.is_file():
+            self.script = Path(self.script)
+        elif (Path('lain') / default_script).is_file():
             self.script = default_script
         else:
             self.script = None
 
-        default_unit = Path('lain/.config/systemd/user/' + self.name + '.service')
+        default_unit = Path('.config/systemd/user/' + self.name + '.service')
         if hasattr(self, 'userunits'):
-            self.userunits = list(map(lambda unit: Path('lain/.config/systemd/user/' + unit), self.userunits))
-        elif default_unit.is_file():
+            self.userunits = list(map(lambda unit: Path('.config/systemd/user/' + unit), self.userunits))
+        elif (Path('lain') / default_unit).is_file():
             self.userunits = [default_unit]
         else:
             self.userunits = None
@@ -63,9 +68,9 @@ class Package:
             title = package.name + ' - Configure'
             submenu = ChecklistMenu(screen, title, [
                 ('Install', toggle(package, 'install')),
-                ('Copy Config', toggle(package, 'install')),
-                ('Run Script', toggle(package, 'install')),
-                ('Enable Units', toggle(package, 'install'))
+                ('Export Config', toggle(package, 'export_config')),
+                ('Run Script', toggle(package, 'run_script')),
+                ('Export Units', toggle(package, 'export_units'))
             ], True)
             items += [(package.name, toggle(package, 'enabled'), submenu.display)]
         return ChecklistMenu(screen, title, items, True)
