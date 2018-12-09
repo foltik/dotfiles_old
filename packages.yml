@@ -26,6 +26,9 @@ Editors:
 
 Window Manager:
   - X11:
+      config:
+        - .xinitrc
+        - .xserverrc
       userunit:
         - xmodmap@.service
         - xresources@.service
