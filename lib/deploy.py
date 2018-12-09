@@ -15,9 +15,9 @@ installed_packages = pacman.get_installed()
 def copy(source, dest):
     print(source, '->', dest)
     if source.is_dir():
-        pass#distutils.dir_util.copy_tree(source.absolute(), dest.absolute())
+        distutils.dir_util.copy_tree(source.absolute(), dest.absolute())
     else:
-        pass#distutils.file_util.copy_file(source.absolute(), dest.absolute())
+        distutils.file_util.copy_file(source.absolute(), dest.absolute())
 
 def import_paths(paths, base):
     if not isinstance(paths, list):
@@ -35,15 +35,15 @@ def export_paths(paths, base):
 def install(package):
     if not package.install or not package.source:
         return
-    if package.source == 'core':# and package.name not in installed_packages:
-        print('pacman', package.name)
-        #pacman.install(package.name)
-    elif package.source == 'aur':# and package.name not in installed_packages:
-        print('yay', package.name)
-        #yay.install(package.name)
+    if package.source == 'core' and package.name not in installed_packages:
+        print('pacman -S', package.name)
+        pacman.install(package.name)
+    elif package.source == 'aur' and package.name not in installed_packages:
+        print('yay -S', package.name)
+        yay.install(package.name)
     elif package.source == 'git':
-        print('git', package.name)
-        #git.clone(package.url, 'git/' + package.name)
+        print('git clone', package.name)
+        git.clone(package.url, 'git/' + package.name)
         
 
 def export_config(package):
@@ -67,7 +67,7 @@ def run_script(package):
         return
     for script in package.script:
         print('fish', script)
-        #proc.exec(['fish', package.script.absolute()])
+        proc.exec(['fish', package.script])
 
         
 def export_units(package):
