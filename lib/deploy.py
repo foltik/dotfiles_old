@@ -1,15 +1,13 @@
-import os
 import distutils.dir_util
 import distutils.file_util
-import subprocess
-from pathlib import Path
-from lib.diff import diff
 from lib.package import Package
 from lib.path import local_path, deploy_path
 import lib.proc as proc
 import lib.pacman as pacman
 import lib.yay as yay
 import lib.git as git
+from lib.diff import diff
+from lib.fish import fish
 
 installed_packages = pacman.get_installed()
 
@@ -63,14 +61,15 @@ def diff_config(package):
     for config in package.config:
         print(diff(config, deploy_path(config)))
 
+
 def run_script(package):
     if not package.run_script or not package.script:
         return
     for script in package.script:
         print('fish', script)
-        proc.exec(['fish', package.script])
-
+        print(fish(script))
         
+
 def export_units(package):
     if not package.export_units or not package.userunit:
         return
