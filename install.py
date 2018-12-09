@@ -3,7 +3,9 @@ import os
 import sys
 import argparse
 import curses
+import distutils.dir_util
 import lib.deploy as deploy
+from pathlib import Path
 from lib.parse import parse
 from lib.package import Category, Package
 from lib.menu import Menu, ChecklistMenu
@@ -16,6 +18,18 @@ def run():
     for category in [c for c in parsed_categories if c.enabled]:
         for package in category.packages:
             configure(package)
+
+def dump(package):
+    print(package.name + ':')
+    for k, v in package.getattrs():
+        print('    ' + k, v)
+
+def lookup_package(name):
+    try:
+        package = next(p for p in parsed_packages if p.name == name or p.alias == name)
+        return package
+    except StopIteration:
+        raise Exception('Package not found: ' + name)
 
 class App:
     def __init__(self, stdscreen):
@@ -39,6 +53,8 @@ class App:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Foltik's super cool dotfiles install script")
     parser.add_argument('packages', metavar='pkg', type=str, nargs='*')
+    parser.add_argument('--all', '-a', dest='all', action='store_const', const=True,
+                        help='Run on all packages')
 
     actions = [
         ('--deploy', '-d', deploy.deploy, 'Run all options'),
@@ -47,7 +63,9 @@ if __name__ == '__main__':
         ('--import-config', '-C', deploy.import_config, 'Import package config'),
         ('--script', '-x', deploy.run_script, 'Run package script'),
         ('--units', '-u', deploy.export_units, 'Export and enable package units'),
-        ('--import-units', '-U', deploy.import_units, 'Import package units')
+        ('--import-units', '-U', deploy.import_units, 'Import package units'),
+        ('--enable-units', '-e', deploy.enable_units, 'Enable package units'),
+        ('--dump', '-l', dump, 'Dump package attributes')
     ]
 
     for action in actions:
@@ -55,18 +73,19 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if args.packages == []:
+    if args.actions != None and args.packages == [] and args.all == True:
+        for package in parsed_packages:
+            for action in args.actions:
+                action(package)
+    elif args.actions != None and args.packages != []:
+        for package in args.packages:
+            for action in args.actions:
+                action(lookup_package(package))
+    else:
         os.environ.setdefault('ESCDELAY', '0')
         curses.wrapper(App)
         if run_installer:
             run()
-    else:
-        for action in args.actions:
-            for package in args.packages:
-                try:
-                    pkg = next(pkg for pkg in parsed_packages if pkg.name == package)
-                    print(str(action) + ': ' + str(pkg))
-                    action(pkg)
-                except StopIteration:
-                    print('Package not found: ' + package)
-                    sys.exit(1)
+
+    if Path('git').is_dir():
+        distutils.dir_util.remove_tree('git')
