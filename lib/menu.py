@@ -109,11 +109,27 @@ class ChecklistMenu(Menu):
             text_mode = curses.A_REVERSE if index == self.position else curses.A_NORMAL
             self.window.addstr(index + 3, 1, text, text_mode)
 
+    def all(self, val):
+        for i in range(0, len(self.states)):
+            self.states[i] = val
+
+        for item in self.items:
+            fn = item[1]
+            if isinstance(fn, LambdaType):
+                fn(val)
+        
+
     def input(self, key):
         super().input(key)
 
         if key == ord('\t'):
             self.expand(self.position)
+
+        if key == ord('e'):
+            self.all(True)
+
+        if key == ord('d'):
+            self.all(False)
 
     def expand(self, index):
         if len(self.items[index]) >= 3:
