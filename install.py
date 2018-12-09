@@ -53,19 +53,19 @@ class App:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Foltik's super cool dotfiles install script")
     parser.add_argument('packages', metavar='pkg', type=str, nargs='*')
-    parser.add_argument('--all', '-a', dest='all', action='store_const', const=True,
+    parser.add_argument('-a', '--all', dest='all', action='store_const', const=True,
                         help='Run on all packages')
 
     actions = [
-        ('--deploy', '-d', deploy.deploy, 'Run all options'),
-        ('--install', '-s', deploy.install, 'Install package'),
-        ('--config', '-c', deploy.export_config, 'Export package config'),
-        ('--import-config', '-C', deploy.import_config, 'Import package config'),
-        ('--script', '-x', deploy.run_script, 'Run package script'),
-        ('--units', '-u', deploy.export_units, 'Export and enable package units'),
-        ('--import-units', '-U', deploy.import_units, 'Import package units'),
-        ('--enable-units', '-e', deploy.enable_units, 'Enable package units'),
-        ('--dump', '-l', dump, 'Dump package attributes')
+        ('-d', '--deploy', deploy.deploy, 'alias for -icsue'),
+        ('-i', '--install', deploy.install, 'install package'),
+        ('-c', '--config', deploy.export_config, 'export package config'),
+        ('-s', '--script', deploy.run_script, 'run package script'),
+        ('-u', '--units', deploy.export_units, 'export and enable package units'),
+        ('-e', '--enable-units', deploy.enable_units, 'enable package units'),
+        ('-C', '--import-config', deploy.import_config, 'import package config'),
+        ('-U', '--import-units', deploy.import_units, 'import package units'),
+        ('-l', '--dump', dump, 'dump package attributes')
     ]
 
     for action in actions:
