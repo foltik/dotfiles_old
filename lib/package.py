@@ -65,7 +65,7 @@ class Package:
             self[prop] = None
 
     def update_from_files(self):
-        self.transform_default('config', self.name, 'lain/.config/')
+        self.transform_default('config', self.name, 'lain/')
         self.transform_default('script', self.name + '.fish', 'scripts/')
         self.transform_default('userunit', self.name + '.service', 'lain/.config/systemd/user/')
 
