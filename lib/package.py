@@ -1,5 +1,6 @@
 from pathlib import Path
 from lib.menu import ChecklistMenu
+from lib.path import local_path, deploy_path
 
 def toggle(obj, prop):
     return lambda b: setattr(obj, prop, b)
@@ -50,23 +51,23 @@ class Package:
         return [(k, v) for k, v in vars(self).items() if v != None and k not in excepted]
 
     def transform_default(self, prop, default, basepath):
-        default_path = Path(default)
+        default_path = local_path(basepath, default)
         if hasattr(self, prop):
             if isinstance(self[prop], list):
-                self[prop] = list(map(lambda p: Path(p), self[prop]))
+                self[prop] = list(map(lambda p: local_path(basepath, p), self[prop]))
             elif self[prop] == 'none':
                 self[prop] = None
             elif self[prop] != None:
-                self[prop] = [Path(self[prop])]
+                self[prop] = [local_path(basepath, self[prop])]
         elif (Path(basepath) / default_path).is_dir() or (Path(basepath) / default_path).is_file():
             self[prop] = [default_path]
         else:
             self[prop] = None
 
     def update_from_files(self):
-        self.transform_default('config', self.name, 'lain/.config')
-        self.transform_default('script', self.name + '.fish', 'scripts')
-        self.transform_default('userunit', self.name + '.service', 'lain/.config/systemd/user')
+        self.transform_default('config', self.name, 'lain/')
+        self.transform_default('script', self.name + '.fish', 'scripts/')
+        self.transform_default('userunit', self.name + '.service', 'lain/.config/systemd/user/')
 
     @staticmethod
     def config_menu(screen, title, packages):
