@@ -10,4 +10,4 @@ def deploy_path(path):
     start = path.parts[0]
     target = path.parts[1:]
     if start == 'lain':
-        return Path('~') / Path(*target)
+        return (Path('~') / Path(*target)).expanduser()

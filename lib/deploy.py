@@ -1,5 +1,6 @@
 import os
-import distutils
+import distutils.dir_util
+import distutils.file_util
 import subprocess
 from pathlib import Path
 from lib.diff import diff
@@ -15,9 +16,9 @@ installed_packages = pacman.get_installed()
 def copy(source, dest):
     print(source, '->', dest)
     if source.is_dir():
-        distutils.dir_util.copy_tree(source.absolute(), dest.absolute())
+        distutils.dir_util.copy_tree(str(source), str(dest))
     else:
-        distutils.file_util.copy_file(source.absolute(), dest.absolute())
+        distutils.file_util.copy_file(str(source), str(dest))
 
 def import_paths(paths, base):
     if not isinstance(paths, list):
