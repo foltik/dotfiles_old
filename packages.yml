@@ -7,6 +7,7 @@ Command Line Tools:
   - ripgrep
   - exa
   - git
+  - htop
 
 System Tools:
   - networkmanager
