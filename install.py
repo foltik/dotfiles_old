@@ -27,6 +27,8 @@ def dump(package):
         else:
             print('    ' + k, v)
 
+    print()
+    
 def lookup_package(name):
     try:
         package = next(p for p in parsed_packages if p.name == name or p.alias == name)
