@@ -11,5 +11,5 @@ def install_all(packages):
 
 def pacman(flags, sudo = False):
     cmd = ['pacman', '--noconfirm'] + flags
-    subproc = proc.sudo(cmd) if sudo else proc.exec(cmd)
+    subproc = proc.exec(cmd, sudo)
     return proc.communicate(subproc, cmd)

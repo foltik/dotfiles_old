@@ -1,23 +1,16 @@
 import subprocess
 
-def sudo(cmd):
-    #print(['sudo'] + cmd)
-    return subprocess.Popen(['sudo'] + cmd,
-                       stderr = subprocess.PIPE,
-                       stdout = subprocess.PIPE,
-                       stdin = subprocess.PIPE)
-
-def exec(cmd):
+def exec(cmd, sudo = False):
     #print(cmd)
-    return subprocess.Popen(cmd,
+    return subprocess.Popen(['sudo'] + cmd if sudo else cmd,
                        stderr = subprocess.PIPE,
                        stdout = subprocess.PIPE,
                        stdin = subprocess.PIPE)
 
-def communicate(proc, cmd):
+def communicate(proc, cmd, success_retvals = [0]):
     data = proc.communicate()
 
-    if proc.returncode != 0:
-        raise Exception('Command failed: ' + data[1].decode())
+    if proc.returncode not in success_retvals:
+        raise Exception('Command failed: "' + ' '.join(cmd) + '"' + data[1].decode())
 
     return data[0].decode()
