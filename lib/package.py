@@ -52,7 +52,6 @@ class Package:
 
     def transform_default(self, prop, default, basepath):
         default_path = local_path(basepath, default)
-        print(default_path)
         if hasattr(self, prop):
             if isinstance(self[prop], list):
                 self[prop] = list(map(lambda p: local_path(basepath, p), self[prop]))
