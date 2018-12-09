@@ -52,6 +52,7 @@ class Package:
 
     def transform_default(self, prop, default, basepath):
         default_path = local_path(basepath, default)
+        print(default_path)
         if hasattr(self, prop):
             if isinstance(self[prop], list):
                 self[prop] = list(map(lambda p: local_path(basepath, p), self[prop]))
@@ -59,13 +60,13 @@ class Package:
                 self[prop] = None
             elif self[prop] != None:
                 self[prop] = [local_path(basepath, self[prop])]
-        elif (Path(basepath) / default_path).is_dir() or (Path(basepath) / default_path).is_file():
+        elif default_path.is_dir() or default_path.is_file():
             self[prop] = [default_path]
         else:
             self[prop] = None
 
     def update_from_files(self):
-        self.transform_default('config', self.name, 'lain/')
+        self.transform_default('config', self.name, 'lain/.config/')
         self.transform_default('script', self.name + '.fish', 'scripts/')
         self.transform_default('userunit', self.name + '.service', 'lain/.config/systemd/user/')
 
