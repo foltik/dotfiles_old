@@ -31,7 +31,7 @@ Editors:
 
 Window Manager:
   - i3-gaps:
-      alias: wal
+      alias: i3
       source: aur
       config: .config/i3/config.ppi3
   - ppi3-git:
