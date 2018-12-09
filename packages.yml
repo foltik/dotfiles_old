@@ -5,9 +5,8 @@ Base:
       source: none
       config: none
       userunit:
-        - i3@0.service
-        - xmodmap@0.service
-        - xresources@0.service
+        - xmodmap@.service
+        - xresources@.service
 
 Command Line Tools:
   - yay
@@ -34,6 +33,7 @@ Window Manager:
       alias: i3
       source: aur
       config: .config/i3/config.ppi3
+      userunit: i3@.service
   - ppi3-git:
       source: aur
   - compton
