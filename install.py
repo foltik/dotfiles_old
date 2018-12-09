@@ -65,7 +65,9 @@ if __name__ == '__main__':
         ('-e', '--enable-units', deploy.enable_units, 'enable package units'),
         ('-C', '--import-config', deploy.import_config, 'import package config'),
         ('-U', '--import-units', deploy.import_units, 'import package units'),
-        ('-l', '--dump', dump, 'dump package attributes')
+        ('-l', '--dump', dump, 'dump package attributes'),
+        ('-Dc', '--diff-config', deploy.diff_config, 'diff local and repo config'),
+        ('-Du', '--diff-units', deploy.diff_units, 'diff local and repo units')
     ]
 
     for action in actions:
