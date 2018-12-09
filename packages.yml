@@ -1,5 +1,6 @@
 Base:
-  - fish
+  - fish:
+      config: .config/fish/config.fish
   - systemd:
       source: none
       config: none
