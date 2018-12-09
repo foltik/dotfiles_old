@@ -17,17 +17,17 @@ def copy(source, dest):
     else:
         pass#distutils.file_util.copy_file(source.absolute(), dest.absolute())
 
-def import_path(paths):
+def import_paths(paths, base):
     if not isinstance(paths, list):
         paths = [paths]
     for path in paths:
-        copy(Path('~') / path, Path('./lain') / path)
+        copy(Path('~') / Path(base) / path, Path('lain') / Path(base) / path)
 
-def export_path(paths):
+def export_paths(paths, base):
     if not isinstance(paths, list):
         paths = [paths]
     for path in paths:
-        copy(Path('./lain') / path, Path('~') / path)
+        copy(Path('lain') / Path(base) / path, Path('~') / Path(base) / path)
 
 def install(package):
     if not package.install or not package.source:
@@ -46,33 +46,34 @@ def install(package):
 def export_config(package):
     if not package.export_config or not package.config:
         return
-    export_path(package.config)
+    export_paths(package.config, '.config')
 
 def import_config(package):
     if not package.config:
         return
-    import_path(package.config)
+    import_paths(package.config, '.config')
 
 def run_script(package):
     if not package.run_script or not package.script:
         return
-    print('fish', package.script)
-    #proc.exec(['fish', package.script.absolute()])
+    for script in package.script:
+        print('fish', script)
+        #proc.exec(['fish', package.script.absolute()])
 
 def export_units(package):
-    if not package.export_units or not package.userunits:
+    if not package.export_units or not package.userunit:
         return
-    export_path(package.userunits)
+    export_paths(package.userunit, '.config/systemd/user')
 
 def import_units(package):
-    if not package.userunits:
+    if not package.userunit:
         return
-    import_path(package.userunits)
+    import_paths(package.userunit, 'lain/.config/systemd/user')
 
 def enable_units(package):
-    if not package.enable_units or not package.userunits:
+    if not package.enable_units or not package.userunit:
         return
-    for unit in package.userunits:
+    for unit in package.userunit:
         print('systemctl --user enable', unit.name)
         #proc.exec(['systemctl', '--user', 'enable', unit.name])
 

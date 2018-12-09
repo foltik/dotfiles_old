@@ -57,7 +57,7 @@ class Package:
             elif self[prop] == 'none':
                 self[prop] = None
             elif self[prop] != None:
-                self[prop] = Path(self[prop])
+                self[prop] = [Path(self[prop])]
         elif (Path(basepath) / default_path).is_dir() or (Path(basepath) / default_path).is_file():
             self[prop] = [default_path]
         else:
