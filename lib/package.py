@@ -21,7 +21,9 @@ class Package:
             self.name = obj
 
         # Transform and infer attributes
-        self.update_from_files()
+        self.transform_default('config', '.config/' + self.name, 'lain/')
+        self.transform_default('script', self.name + '.fish', 'scripts/')
+        self.transform_default('userunit', self.name + '.service', 'lain/.config/systemd/user/')
 
         # Install State
         self.enabled = True
@@ -63,11 +65,6 @@ class Package:
             self[prop] = [default_path]
         else:
             self[prop] = None
-
-    def update_from_files(self):
-        self.transform_default('config', self.name, 'lain/')
-        self.transform_default('script', self.name + '.fish', 'scripts/')
-        self.transform_default('userunit', self.name + '.service', 'lain/.config/systemd/user/')
 
     @staticmethod
     def config_menu(screen, title, packages):
