@@ -2,6 +2,7 @@ Base:
   - fish
   - systemd:
       source: none
+      config: none
       userunits:
         - i3@0.service
         - xmodmap@0.service
