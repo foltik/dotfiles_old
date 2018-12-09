@@ -2,7 +2,9 @@ import os
 import distutils
 import subprocess
 from pathlib import Path
+from lib.diff import diff
 from lib.package import Package
+from lib.path import local_path, deploy_path
 import lib.proc as proc
 import lib.pacman as pacman
 import lib.yay as yay
@@ -21,13 +23,14 @@ def import_paths(paths, base):
     if not isinstance(paths, list):
         paths = [paths]
     for path in paths:
-        copy(Path('~') / Path(base) / path, Path('lain') / Path(base) / path)
+        copy(deploy_path(path), path)
 
 def export_paths(paths, base):
     if not isinstance(paths, list):
         paths = [paths]
     for path in paths:
-        copy(Path('lain') / Path(base) / path, Path('~') / Path(base) / path)
+        copy(path, deploy_path(path))
+
 
 def install(package):
     if not package.install or not package.source:
@@ -53,6 +56,12 @@ def import_config(package):
         return
     import_paths(package.config, '.config')
 
+def diff_config(package):
+    if not package.config:
+        return
+    for config in package.config:
+        print(diff(config, deploy_path(config)))
+
 def run_script(package):
     if not package.run_script or not package.script:
         return
@@ -60,6 +69,7 @@ def run_script(package):
         print('fish', script)
         #proc.exec(['fish', package.script.absolute()])
 
+        
 def export_units(package):
     if not package.export_units or not package.userunit:
         return
@@ -70,12 +80,19 @@ def import_units(package):
         return
     import_paths(package.userunit, 'lain/.config/systemd/user')
 
+def diff_units(package):
+    if not package.userunit:
+        return
+    for unit in package.userunit:
+        print(diff(unit, deploy_path(unit)))
+    
 def enable_units(package):
     if not package.enable_units or not package.userunit:
         return
     for unit in package.userunit:
         print('systemctl --user enable', unit.name)
         #proc.exec(['systemctl', '--user', 'enable', unit.name])
+
 
 def deploy(package):
     if not package.enabled:
