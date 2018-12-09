@@ -1,12 +1,6 @@
 Base:
   - fish:
       config: .config/fish/config.fish
-  - systemd:
-      source: none
-      config: none
-      userunit:
-        - xmodmap@.service
-        - xresources@.service
 
 Command Line Tools:
   - yay
@@ -29,6 +23,10 @@ Editors:
   - neovim
 
 Window Manager:
+  - X11:
+      userunit:
+        - xmodmap@.service
+        - xresources@.service
   - i3-gaps:
       alias: i3
       source: aur
