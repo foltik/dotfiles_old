@@ -6,15 +6,20 @@ def toggle(obj, prop):
 
 class Package:
     def __init__(self, obj):
-        # Immutable Attributes
+        # Defaults
+        self.source = 'core'
+        self.alias = None
+        
+        # Immutable attributes
         if isinstance(obj, dict):
             self.name, props = next(iter(obj.items()))
             self.source = 'core'
             for key, value in props.items():
-                setattr(self, key, value)
+                setattr(self, key, value if value != 'none' else None)
         else:
             self.name = obj
-            self.source = 'core'
+
+        # Transform and infer attributes
         self.update_from_files()
 
         # Install State
@@ -23,43 +28,45 @@ class Package:
         self.export_config = True
         self.run_script = True
         self.export_units = True
+        self.enable_units = True
 
         
     def __repr__(self):
         return self.name
 
-    def update_from_files(self):
-        if self.source == 'none':
-            self.source = None
-        
-        default_config = Path('.config/' + self.name)
-        if hasattr(self, 'config'):
-            if isinstance(self.config, list):
-                self.config = list(map(lambda c: Path(c), self.config))
-            elif self.config == 'none':
-                self.config = None
-            else:
-                self.config = Path(self.config)
-        elif (Path('lain') / default_config).is_dir():
-            self.config = default_config
-        else:
-            self.config = None
-        
-        default_script = Path(self.name + '.fish')
-        if hasattr(self, 'script'):
-            self.script = Path(self.script)
-        elif (Path('lain') / default_script).is_file():
-            self.script = default_script
-        else:
-            self.script = None
+    def __getitem__(self, key):
+        return getattr(self, key)
 
-        default_unit = Path('.config/systemd/user/' + self.name + '.service')
-        if hasattr(self, 'userunits'):
-            self.userunits = list(map(lambda unit: Path('.config/systemd/user/' + unit), self.userunits))
-        elif (Path('lain') / default_unit).is_file():
-            self.userunits = [default_unit]
+    def __setitem__(self, key, value):
+        return setattr(self, key, value)
+
+    def getattrs(self):
+        excepted = [
+            'name', 'enabled', 'install',
+            'export_config', 'run_script',
+            'export_units', 'enable_units'
+        ]
+
+        return [(k, v) for k, v in vars(self).items() if v != None and k not in excepted]
+
+    def transform_default(self, prop, default, basepath):
+        default_path = Path(default)
+        if hasattr(self, prop):
+            if isinstance(self[prop], list):
+                self[prop] = list(map(lambda p: Path(p), self[prop]))
+            elif self[prop] == 'none':
+                self[prop] = None
+            elif self[prop] != None:
+                self[prop] = Path(self[prop])
+        elif (Path(basepath) / default_path).is_dir() or (Path(basepath) / default_path).is_file():
+            self[prop] = [default_path]
         else:
-            self.userunits = None
+            self[prop] = None
+
+    def update_from_files(self):
+        self.transform_default('config', self.name, 'lain/.config')
+        self.transform_default('script', self.name + '.fish', 'scripts')
+        self.transform_default('userunit', self.name + '.service', 'lain/.config/systemd/user')
 
     @staticmethod
     def config_menu(screen, title, packages):
@@ -70,7 +77,8 @@ class Package:
                 ('Install', toggle(package, 'install')),
                 ('Export Config', toggle(package, 'export_config')),
                 ('Run Script', toggle(package, 'run_script')),
-                ('Export Units', toggle(package, 'export_units'))
+                ('Export Units', toggle(package, 'export_units')),
+                ('Enable Units', toggle(package, 'enable_units'))
             ], True)
             items += [(package.name, toggle(package, 'enabled'), submenu.display)]
         return ChecklistMenu(screen, title, items, True)
