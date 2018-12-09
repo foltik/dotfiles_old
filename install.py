@@ -64,7 +64,7 @@ if __name__ == '__main__':
         ('-i', '--install', deploy.install, 'install package'),
         ('-c', '--config', deploy.export_config, 'export package config'),
         ('-s', '--script', deploy.run_script, 'run package script'),
-        ('-u', '--units', deploy.export_units, 'export and enable package units'),
+        ('-u', '--units', deploy.export_units, 'export package units'),
         ('-e', '--enable-units', deploy.enable_units, 'enable package units'),
         ('-C', '--import-config', deploy.import_config, 'import package config'),
         ('-U', '--import-units', deploy.import_units, 'import package units'),
