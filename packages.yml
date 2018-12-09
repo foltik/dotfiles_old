@@ -23,10 +23,15 @@ Terminal:
 
 Editors:
   - emacs:
-      config: .emacs.d
+      config:
+        - .emacs.d/config.org
+        - .emacs.d/init.el
   - neovim
 
 Window Manager:
+  - i3-gaps:
+      source: aur
+      config: .config/i3/config.ppi3
   - ppi3-git:
       source: aur
   - compton
