@@ -22,7 +22,10 @@ def run():
 def dump(package):
     print(package.name + ':')
     for k, v in package.getattrs():
-        print('    ' + k, v)
+        if isinstance(v, list):
+            print('    ' + k, [str(i) for i in v])
+        else:
+            print('    ' + k, v)
 
 def lookup_package(name):
     try:
