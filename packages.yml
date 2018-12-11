@@ -25,6 +25,7 @@ Editors:
       config:
         - .emacs.d/config.org
         - .emacs.d/init.el
+        - .local/share/applications/emacs.desktop
   - neovim
 
 Window Manager:
