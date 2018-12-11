@@ -1,12 +1,12 @@
 import lib.proc as proc
 
 def install(package):
-    output = yay(['-S', package], True)
+    output = yay(['-S', package])
 
 def install_all(packages):
-    output = yay(['-S'] + packages, True)
+    output = yay(['-S'] + packages)
 
-def yay(flags, sudo = False):
+def yay(flags):
     cmd = ['yay', '--noconfirm'] + flags
-    subproc = proc.sudo(cmd) if sudo else proc.exec(cmd)
+    subproc = proc.exec(cmd)
     return proc.communicate(subproc, cmd)

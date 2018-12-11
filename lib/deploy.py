@@ -6,6 +6,7 @@ import lib.proc as proc
 import lib.pacman as pacman
 import lib.yay as yay
 import lib.git as git
+import lib.systemd as systemd
 from lib.diff import diff
 from lib.fish import fish
 
@@ -91,7 +92,7 @@ def enable_units(package):
         return
     for unit in package.userunit:
         print('systemctl --user enable', unit.name)
-        #proc.exec(['systemctl', '--user', 'enable', unit.name])
+        systemd.enable(unit.name, True)
 
 
 def deploy(package):
