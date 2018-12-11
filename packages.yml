@@ -1,6 +1,8 @@
 Base:
   - fish:
-      config: .config/fish/config.fish
+      config:
+        - .config/fish/config.fish
+        - .bashrc
 
 Command Line Tools:
   - yay
@@ -30,6 +32,7 @@ Window Manager:
       config:
         - .xinitrc
         - .xserverrc
+        - .bash_profile
       userunit:
         - x11@.target
         - xmodmap@.service
@@ -42,7 +45,11 @@ Window Manager:
   - ppi3-git:
       source: aur
   - compton
-  - polybar
+  - polybar:
+      source: aur
+      userunit:
+        - polybar-top.service
+        - polybar-bottom.service
 
 Desktop Tools:
   - python-pywal:
