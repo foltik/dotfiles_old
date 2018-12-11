@@ -69,6 +69,11 @@ bindsym $mod+Shift+equal {{?\\}}            # shoot all workspaces over to my
 bindsym $mod+period move workspace to \      # toggle workspace between monitors
 output left
 
+# media keys
+bindsym XF86Audio{Raise,Lower}Volume exec --no-startup-id pactl set-sink-volume 0 {+,-}5%
+bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute 0 toggle
+bindsym XF86MonBrightness{Up,Down} exec --no-startup-id xbacklight -{inc,dec} 10
+
 ###############################################################################
 #                                    MODES                                    #
 ###############################################################################
