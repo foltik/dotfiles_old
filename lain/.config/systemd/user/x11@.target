@@ -1,2 +1,2 @@
 [Unit]
-Description=Connection to X11 display %i
+Description=X11 server on display :%i
