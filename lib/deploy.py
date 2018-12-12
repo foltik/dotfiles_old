@@ -14,6 +14,9 @@ installed_packages = pacman.get_installed()
 
 def copy(source, dest):
     print(source, '->', dest)
+    if not dest.parent.is_dir():
+        distutils.dir_util.mkpath(str(dest.parent))
+        
     if source.is_dir():
         distutils.dir_util.copy_tree(str(source), str(dest))
     else:
