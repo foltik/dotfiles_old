@@ -9,21 +9,22 @@ class Package:
     def __init__(self, obj):
         # Defaults
         self.source = 'core'
-        self.alias = None
         
         # Immutable attributes
         if isinstance(obj, dict):
             self.name, props = next(iter(obj.items()))
+            self.alias = self.name
             self.source = 'core'
             for key, value in props.items():
                 setattr(self, key, value if value != 'none' else None)
         else:
             self.name = obj
+            self.alias = self.name
 
-        # Transform and infer attributes
-        self.transform_default('config', '.config/' + self.name, 'lain/')
-        self.transform_default('script', self.name + '.fish', 'scripts/')
-        self.transform_default('userunit', self.name + '.service', 'lain/.config/systemd/user/')
+        # Infer and properly format attributes as paths
+        self.check_defaults('config', ['.config/%s'], 'lain/')
+        self.check_defaults('script', ['%s.fish'], 'scripts/')
+        self.check_defaults('userunit', ['%s.service', '%s@.service'], 'lain/.config/systemd/user/')
 
         # Install State
         self.enabled = True
@@ -38,7 +39,11 @@ class Package:
         return self.name
 
     def __getitem__(self, key):
-        return getattr(self, key)
+        if hasattr(self, key):
+            val = getattr(self, key)
+            return None if val == 'none' else val
+        else:
+            return None
 
     def __setitem__(self, key, value):
         return setattr(self, key, value)
@@ -52,19 +57,20 @@ class Package:
 
         return [(k, v) for k, v in vars(self).items() if v != None and k not in excepted]
 
-    def transform_default(self, prop, default, basepath):
-        default_path = local_path(basepath, default)
-        if hasattr(self, prop):
-            if isinstance(self[prop], list):
-                self[prop] = list(map(lambda p: local_path(basepath, p), self[prop]))
-            elif self[prop] == 'none':
-                self[prop] = None
-            elif self[prop] != None:
-                self[prop] = [local_path(basepath, self[prop])]
-        elif default_path.is_dir() or default_path.is_file():
-            self[prop] = [default_path]
-        else:
-            self[prop] = None
+    def check_defaults(self, prop, defaults, basepath):
+        for default in defaults:
+            for name in [self.name, self.alias]: 
+                default_path = local_path(basepath, default % name)
+                if self[prop]:
+                    if isinstance(self[prop], list):
+                        self[prop] = list(map(lambda p: local_path(basepath, p), self[prop]))
+                    else:
+                        self[prop] = [local_path(basepath, self[prop])]
+                elif default_path.is_dir() or default_path.is_file():
+                    self[prop] = [default_path]
+                    
+                if self[prop] != None:
+                    return
 
     @staticmethod
     def config_menu(screen, title, packages):
