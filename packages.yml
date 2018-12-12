@@ -29,11 +29,13 @@ Editors:
   - neovim
 
 Window Manager:
-  - X11:
+  - x:
+      source: none
       config:
         - .xinitrc
         - .xserverrc
         - .bash_profile
+        - .config/x11/modmap
       userunit:
         - x11@.target
         - xmodmap@.service
