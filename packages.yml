@@ -70,3 +70,7 @@ Fonts:
   - all-the-icons:
       source: git
       url: https://github.com/domtronn/all-the-icons.el
+
+Themes:
+  - paper-icon-theme:
+      source: aur
