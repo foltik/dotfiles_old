@@ -1,24 +1,31 @@
 Base:
   - fish:
       config:
-        - .config/fish
+        - .config/fish/config.fish
         - .bashrc
 
 Command Line Tools:
-  - yay
+  - yay:
+      source: aur
   - ripgrep
   - exa
   - git
   - htop
   - ranger
+  - fasd
 
 System Tools:
   - networkmanager
 
-Terminal:
+Terminal and Shell:
   - alacritty
   - alacritty-terminfo
-  - autojump
+  - fisher:
+      source: aur
+  - fasd
+  - fish-fasd:
+      source: fisher
+      repo: fishgretel/fasd
 
 Editors:
   - emacs:
@@ -42,6 +49,7 @@ Window Manager:
   - i3-gaps:
       alias: i3
       source: aur
+      config: .config/i3/config.ppi3
   - ppi3-git:
       source: aur
   - compton
