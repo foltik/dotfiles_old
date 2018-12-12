@@ -22,6 +22,9 @@ begin
     end
 end
 
+# Load keymap
+xkbcomp ~/.config/xkb/map.xkm $DISPLAY
+
 ### Aliases ###
 function ls
     exa $argv
