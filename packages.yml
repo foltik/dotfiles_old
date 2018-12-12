@@ -62,6 +62,7 @@ Desktop Tools:
         - wallpaper.timer
   - rofi
   - dunst
+  - ibus
 
 Fonts:
   - ttf-dejavu
