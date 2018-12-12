@@ -61,6 +61,7 @@ Desktop Tools:
         - wallpaper.service
         - wallpaper.timer
   - rofi
+  - dunst
 
 Fonts:
   - ttf-dejavu
