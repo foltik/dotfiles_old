@@ -26,7 +26,11 @@ def import_paths(paths, base):
     if not isinstance(paths, list):
         paths = [paths]
     for path in paths:
-        copy(deploy_path(path), path)
+        if path.is_dir():
+            for subpath in path.iterdir():
+                copy(deploy_path(subpath), subpath)
+        else:
+            copy(deploy_path(path), path)
 
 def export_paths(paths, base):
     if not isinstance(paths, list):
