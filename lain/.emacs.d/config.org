@@ -87,7 +87,7 @@ Make yes-or-no prompts ask for y or n instead
 (setq indent-line-function 'insert-tab)
 #+END_SRC
    
-** Keep backup files out of the way
+** Keep backup files and lockfiles out of the way
 By default, emacs makes files like =file~= and =#file#= and clutters up
 my projects. Instead, store them in =/tmp=!
 #+BEGIN_SRC emacs-lisp
@@ -95,6 +95,7 @@ my projects. Instead, store them in =/tmp=!
     `((".*" . ,temporary-file-directory)))
 (setq auto-save-file-name-transforms
     `((".*" ,temporary-file-directory t)))
+(setq create-lockfiles nil)
 #+END_SRC
 ** Customize the terminal
 Use fish shell in ansi-term
