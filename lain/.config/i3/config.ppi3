@@ -4,7 +4,7 @@
 
 #!nobracket
 
-set $mod Mod1   # Alt key
+set $mod Mod4   # Super key
 set $term alacritty
 
 set $mv 20px    # amount to resize windows (also used for how far to
