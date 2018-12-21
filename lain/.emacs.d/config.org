@@ -639,7 +639,7 @@ when idling on a completion candidate.
 (use-package company-quickhelp
     :hook (company-mode . company-quickhelp-mode))
 #+END_SRC
-*** smartparens
+*** Smart Parentheses
 smartparens handles parens for languages that aren't lispy,
 and paredit handles the rest.
 Keybinds in =M-x sp-cheat-sheet=.
@@ -651,16 +651,17 @@ Keybinds in =M-x sp-cheat-sheet=.
 (use-package smartparens
     :diminish
     :commands smartparens-strict-mode
-    :hook (prog-mode . foltz-paren-mode)
     :config
     (require 'smartparens-config))
 
 (use-package evil-smartparens
-    :commands evil-smartparens-mode
     :hook (smartparens-enabled . evil-smartparens-mode))
-
+#+END_SRC
+*** Smart Parentheses Modes
+Picks a suitable parenthesis editing mode for the 
+current major mode when entering any prog-mode.
+#+BEGIN_SRC emacs-lisp
 (defun foltz-paren-mode ()
-    "Enable a suitable paren editing mode for the current major mode"
     (if (member major-mode 
           '(emacs-lisp-mode
             lisp-mode
@@ -668,6 +669,8 @@ Keybinds in =M-x sp-cheat-sheet=.
             scheme-mode))
         (enable-paredit-mode)
         (smartparens-strict-mode)))
+
+(add-hook 'prog-mode-hook #'foltz-paren-mode)
 #+END_SRC
 *** evil-surround
 Use =S= and a delimiter to surround in visual mode.
