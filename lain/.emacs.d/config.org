@@ -121,6 +121,12 @@ Use fish shell in ansi-term
        (foltz-apply-theme))
     (load-theme spacemacs-dark))
 #+END_SRC
+** Auth storage location
+Set stored auth tokens to be encrypted into emacs directory
+#+BEGIN_SRC emacs-lisp
+(setq auth-sources '("~/.emacs.d/authinfo.gpg"))
+#+END_SRC
+
 * Package Repo Config
 ** Repo Location
 Let's start by configuring the repositories
@@ -723,6 +729,7 @@ Yasnippet adds support for custom snippets
 #+END_SRC
 
 ** Git
+*** magit
 It's magic git!
 Keybinds [[https://github.com/emacs-evil/evil-magit][here]]
 #+BEGIN_SRC emacs-lisp
@@ -737,7 +744,16 @@ Keybinds [[https://github.com/emacs-evil/evil-magit][here]]
     (use-package evil-magit
         :after evil))
 #+END_SRC
-
+*** magithub
+Magic GitHub facilities for magit!
+#+BEGIN_SRC emacs-lisp
+(use-package magithub
+    :after magit
+    :config
+    (magithub-feature-autoinject t)
+    :custom
+    (magithub-clone-default-directory "~/Documents/dev"))
+#+END_SRC
 ** Projects
 Projectile provides project-level features like
 make shortcuts and file switching
