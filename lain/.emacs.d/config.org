@@ -678,6 +678,14 @@ Use =S= and a delimiter to surround in visual mode.
     :config
     (global-evil-surround-mode 1))
 #+END_SRC
+*** ws-butler
+Unobtrusively cleans up whitespace before EOLs 
+as you edit, stopping the noisy commits generated 
+from blanket trimming entire files.
+#+BEGIN_SRC emacs-lisp
+(use-package ws-butler
+    :hook (prog-mode . ws-butler-mode))
+#+END_SRC
 ** Prettification
 *** pretty-mode
 [[https://github.com/pretty-mode/pretty-mode][Redisplay parts of the Emacs buffer as pretty symbols.]]
