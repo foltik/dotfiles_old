@@ -80,3 +80,14 @@ Fonts:
 Themes:
   - paper-icon-theme:
       source: aur
+
+Rust:
+  - rustup
+  - rust-src:
+      source: rustup
+  - clippy-preview:
+      source: rustup
+  - racer:
+      source: cargo
+  - rustfmt:
+      source: cargo

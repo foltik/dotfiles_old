@@ -713,15 +713,13 @@ and activate it in =prog-mode=
 Yasnippet adds support for custom snippets
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
+    :commands yas-minor-mode
     :hook (prog-mode . yas-minor-mode)
     :custom
     (yas-snippet-dirs
-        '("~/.emacs.d/snippets"
-          "~/.emacs.d/elpa/yasnippet-snippets-0.6/snippets"))
-    :config
-    (progn
-        (use-package yasnippet-snippets)
-        (yas-reload-all)))
+      '("~/.emacs.d/snippets"
+        "~/.emacs.d/elpa/yasnippet-snippets-0.6/snippets")))
+;;;(use-package yasnippet-snippets)
 #+END_SRC
 
 ** Git
@@ -899,7 +897,31 @@ cdlatex adds better TeX-specific template expansions and other niceties.
 *** Rust
 #+BEGIN_SRC emacs-lisp
 (use-package rust-mode
-  :mode "\\.rs\\'")
+    :mode "\\.rs\\'"
+    :general
+    (foltz-major-def
+        :keymaps 'rust-mode-map
+        "TAB" 'rust-format-buffer))
+
+(use-package flycheck-rust
+    :pin melpa
+    :hook (rust-mode . flycheck-rust-setup))
+
+(use-package racer
+    :hook ((rust-mode . racer-mode)
+           (rust-mode . eldoc-mode))
+    :custom
+    (racer-cmd "~/.cargo/bin/racer")
+    (racer-rust-src-path "~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src"))
+
+(use-package cargo
+    :hook (rust-mode . cargo-minor-mode)
+    :general
+    (foltz-major-def
+        :keymaps 'rust-mode-map
+        "b" 'cargo-process-build
+        "r" 'cargo-process-run
+        "t" 'cargo-process-test))
 #+END_SRC
 *** C/C++
 **** Irony
