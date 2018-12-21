@@ -606,7 +606,7 @@ Hotkeys for jumping to characters with =f=
 #+END_SRC
 
 * Programming Packages Configuration
-** Autocompletion
+** Autocomplete and Formatting
 *** Company
 company auto-completes stuff in the buffer,
 company-quickhelp shows documentation popups
@@ -639,7 +639,45 @@ when idling on a completion candidate.
 (use-package company-quickhelp
     :hook (company-mode . company-quickhelp-mode))
 #+END_SRC
+*** smartparens
+smartparens handles parens for languages that aren't lispy,
+and paredit handles the rest.
+Keybinds in =M-x sp-cheat-sheet=.
+#+BEGIN_SRC emacs-lisp
+(use-package paredit
+    :diminish
+    :commands enable-paredit-mode)
+     
+(use-package smartparens
+    :diminish
+    :commands smartparens-strict-mode
+    :hook (prog-mode . foltz-paren-mode)
+    :config
+    (require 'smartparens-config))
 
+(use-package evil-smartparens
+    :commands evil-smartparens-mode
+    :hook (smartparens-enabled . evil-smartparens-mode))
+
+(defun foltz-paren-mode ()
+    "Enable a suitable paren editing mode for the current major mode"
+    (if (member major-mode 
+          '(emacs-lisp-mode
+            lisp-mode
+            lisp-interaction-mode
+            scheme-mode))
+        (enable-paredit-mode)
+        (smartparens-strict-mode)))
+#+END_SRC
+*** evil-surround
+Use =S= and a delimiter to surround in visual mode.
+#+BEGIN_SRC emacs-lisp
+(use-package evil-surround
+    :after evil
+    :diminish
+    :config
+    (global-evil-surround-mode 1))
+#+END_SRC
 ** Prettification
 *** pretty-mode
 [[https://github.com/pretty-mode/pretty-mode][Redisplay parts of the Emacs buffer as pretty symbols.]]
