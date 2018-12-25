@@ -2,6 +2,9 @@
 set -U fish_greeting
 set -U fish_user_paths ~/.local/bin
 
+# Mark fish as default shell
+set -gx SHELL /usr/bin/fish
+
 # TTY for gpg pinentry
 set -gx GPG_TTY (tty)
 gpg-connect-agent updatestartuptty /bye >/dev/null
@@ -17,4 +20,8 @@ xkbcomp ~/.config/xkb/map.xkm $DISPLAY
 ### Aliases ###
 function ls
     exa $argv
+end
+
+function ssh
+    env TERM=xterm-256color ssh $argv
 end
