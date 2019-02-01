@@ -80,13 +80,39 @@ Make yes-or-no prompts ask for y or n instead
 (defalias 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
    
-** Tabs are spaces?!
+** Tabs are spaces?! and highlighted??!
 #+BEGIN_SRC emacs-lisp
-(setq-default indent-tabs-mode nil)
-(setq-default tab-width 4)
-(setq indent-line-function 'insert-tab)
+(setq foltz-tab-width 4)
+(setq-default python-indent-offset foltz-tab-width)
+(setq-default evil-shift-width foltz-tab-width)
+(setq-default c-basic-offset foltz-tab-width)
+;; Disable annoying electric indent of previous lines
+(setq-default electric-indent-inhibit t)
+;; Eat the whole tab when I press backspace
+(setq backward-delete-char-untabify-method 'hungry)
+
+(defun foltz-disable-tabs ()
+    (interactive)
+    (setq tab-width foltz-tab-width)
+    (setq indent-tabs-mode nil))
+(defun foltz-enable-tabs ()
+    (interactive)
+    (setq tab-width foltz-tab-width)
+    (local-set-key (kbd "TAB") 'tab-to-tab-stop)
+    (setq indent-tabs-mode 't))
+
+(foltz-disable-tabs)
+
+(add-hook 'prog-mode-hook #'foltz-disable-tabs)
+
+(global-whitespace-mode)
+(setq whitespace-style '(face tabs tab-mark trailing))
+(custom-set-faces
+   '(whitespace-tab ((t (:foreground "#636363")))))
+
+(setq whitespace-display-mappings
+   '((tab-mark 9 [124 9] [92 9])))
 #+END_SRC
-   
 ** Keep backup files and lockfiles out of the way
 By default, emacs makes files like =file~= and =#file#= and clutters up
 my projects. Instead, store them in =/tmp=!
