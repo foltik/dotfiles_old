@@ -762,7 +762,8 @@ and activate it in =prog-mode=
     :general
     (foltz-major-def
         :keymaps 'prog-mode-map
-        "l" 'fci-mode))
+        "l" 'fci-mode
+        "f" 'toggle-truncate-lines))
 #+END_SRC
 
 ** Snippets
