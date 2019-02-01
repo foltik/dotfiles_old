@@ -809,6 +809,7 @@ Projectile provides project-level features like
 make shortcuts and file switching
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
+    :pin melpa
     :init
     (defun foltz-projectile-neotree () "Open NeoTree in the project root"
         (interactive)
@@ -822,6 +823,23 @@ make shortcuts and file switching
                     (neotree-dir project-dir)
                     (neotree-find file-name))))))
 
+    (defun foltz-projectile-discover-projects (directory) "Add projects in dir to projectile cache"
+        (interactive
+            (list (read-directory-name "Starting directory: ")))
+        (let ((subdirs (directory-files directory t)))
+            (mapcar (lambda (dir)
+                (when 
+                    (and 
+                        (file-directory-p dir)
+                        (not (member (file-name-nondirectory dir) '(".." "."))))
+                    (let ((default-directory dir) (projectile-cached-project-root dir))
+                        (when (projectile-project-p)
+                            (projectile-add-known-project (projectile-project-root))))))
+                subdirs)))
+
+    :config
+    (projectile-mode 1)
+    (foltz-projectile-discover-projects "~/Documents/dev")
     :general
     (:keymaps 'projectile-command-map
      "t" 'foltz-projectile-neotree)
@@ -829,6 +847,7 @@ make shortcuts and file switching
         :states 'normal
         "p" '(:keymap projectile-command-map))
     :custom
+    (projectile-completion-system 'ivy)
     (projectile-project-search-path '("~/Documents/dev")))
 #+END_SRC
 ** Languages
@@ -995,6 +1014,7 @@ Irony handles enhanced C/C++ operations powered by clang
 company-irony for company integration
 #+BEGIN_SRC emacs-lisp
 (use-package irony
+    :pin melpa
     :after counsel
     :hook ((c++-mode   . irony-mode)
            (c-mode     . irony-mode)
