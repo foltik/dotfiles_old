@@ -270,7 +270,8 @@ keymap to this, we don't actually need a definer.
 (foltz-help-def
     "?" 'help-for-help
     "h" 'help-for-help
-    "k" 'describe-key)
+    "k" 'describe-key
+    "m" 'describe-mode)
 #+END_SRC
 
 **** b - buffer
