@@ -68,6 +68,10 @@ Desktop Tools:
   - rofi
   - dunst
   - ibus
+  - sxiv
+  - zathura
+  - zathura-pdf-mupdf
+      alias: zathura-pdf
 
 Fonts:
   - ttf-dejavu
