@@ -636,7 +636,16 @@ Hotkeys for jumping to characters with =f=
      "f" 'avy-goto-char-in-line
      "F" 'avy-goto-char))
 #+END_SRC
-
+** Discord Rich Presence
+#+BEGIN_SRC emacs-lisp
+(use-package elcord
+    :pin melpa
+    :commands elcord-mode
+    :general
+    (foltz-major-def
+        :keymaps 'prog-mode-map
+        "d" #'elcord-mode))
+#+END_SRC
 * Programming Packages Configuration
 ** Autocomplete and Formatting
 *** Company
