@@ -399,7 +399,10 @@ Show a cool custom buffer on startup
 
     :config
     (dashboard-setup-startup-hook)
-    (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+    (setq initial-buffer-choice (lambda ()
+        (if (get-buffer "*scratch*")
+            (kill-buffer "*scratch*"))
+        (get-buffer "*dashboard*")))
 
     :custom
     (dashboard-startup-banner 'logo)
