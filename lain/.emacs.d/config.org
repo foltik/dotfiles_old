@@ -80,40 +80,6 @@ Make yes-or-no prompts ask for y or n instead
 (defalias 'yes-or-no-p 'y-or-n-p)
 #+END_SRC
    
-** Tabs are spaces?! and highlighted??!
-#+BEGIN_SRC emacs-lisp
-(setq foltz-tab-width 4)
-(setq-default python-indent-offset foltz-tab-width)
-(setq-default evil-shift-width foltz-tab-width)
-(setq-default c-basic-offset foltz-tab-width)
-;; Disable annoying electric indent of previous lines
-(setq-default electric-indent-inhibit t)
-;; Eat the whole tab when I press backspace
-(setq backward-delete-char-untabify-method 'hungry)
-
-(defun foltz-disable-tabs ()
-    (interactive)
-    (setq tab-width foltz-tab-width)
-    (setq indent-tabs-mode nil))
-(defun foltz-enable-tabs ()
-    (interactive)
-    (setq tab-width foltz-tab-width)
-    (local-set-key (kbd "TAB") 'tab-to-tab-stop)
-    (setq indent-tabs-mode 't))
-
-(foltz-disable-tabs)
-
-(add-hook 'prog-mode-hook #'foltz-disable-tabs)
-
-(setq whitespace-style '(face tabs tab-mark trailing))
-(custom-set-faces
-   '(whitespace-tab ((t (:foreground "#636363")))))
-
-(setq whitespace-display-mappings
-   '((tab-mark 9 [124 9] [92 9])))
-
-(add-hook 'prog-mode-hook #'whitespace-mode)
-#+END_SRC
 ** Keep backup files and lockfiles out of the way
 By default, emacs makes files like =file~= and =#file#= and clutters up
 my projects. Instead, store them in =/tmp=!
@@ -691,7 +657,55 @@ Hotkeys for jumping to characters with =f=
         "d" #'elcord-mode))
 #+END_SRC
 * Programming Packages Configuration
-** Autocomplete and Formatting
+** General Configuration
+Everything the light touches is prog-mode's kingdom.
+#+BEGIN_SRC emacs-lisp
+; Default to 4 space indent
+(add-hook 'prog-mode-hook #'foltz-indent-4-spaces)
+#+END_SRC
+** Formatting
+*** Indentation
+Set some *sane* defaults
+#+BEGIN_SRC emacs-lisp
+(setq foltz-tab-width 4)
+(setq-default python-indent-offset foltz-tab-width)
+(setq-default evil-shift-width foltz-tab-width)
+(setq-default c-basic-offset foltz-tab-width)
+; Disable annoying electric indent of previous lines
+(setq-default electric-indent-inhibit t)
+; Eat the whole tab when I press backspace
+(setq backward-delete-char-untabify-method 'hungry)
+#+END_SRC
+Define some *useful* helper functions
+#+BEGIN_SRC emacs-lisp
+(defun foltz-indent-tabs ()
+  (interactive)
+  (setq tab-width foltz-tab-width)
+  (local-set-key (kbd "TAB") 'tab'to-tab-stop)
+  (setq indent-tabs-mode t))
+
+(defun foltz-indent-spaces (num-spaces)
+  (interactive)
+  (setq tab-width num-spaces)
+  (setq indent-tabs-mode nil))
+(defun foltz-indent-2-spaces ()
+  (foltz-indent-spaces 2))
+(defun foltz-indent-4-spaces ()
+  (foltz-indent-spaces 4))
+(defun foltz-indent-8-spaces ()
+  (foltz-indent-spaces 8))
+
+(foltz-indent-4-spaces)
+
+(setq whitespace-style '(face tabs tab-mark trailing))
+(custom-set-faces
+   '(whitespace-tab ((t (:foreground "#636363")))))
+
+(setq whitespace-display-mappings
+   '((tab-mark 9 [124 9] [92 9])))
+
+(add-hook 'prog-mode-hook #'whitespace-mode)
+#+END_SRC
 *** Company
 company auto-completes stuff in the buffer,
 company-quickhelp shows documentation popups
