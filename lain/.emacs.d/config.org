@@ -1111,6 +1111,13 @@ company-irony for company integration
         (foltz-add-company-backend 'company-irony))
     :hook (irony-mode . foltz-add-company-irony-backend))
 
+(use-package company-irony-c-headers
+    :init
+    (defun foltz-add-company-irony-c-headers ()
+        (message "c headers company added")
+        (foltz-add-company-backend 'company-irony-c-headers))
+    :hook (irony-mode . foltz-add-company-irony-c-headers))
+
 (use-package flycheck-irony
     :hook (irony-mode . flycheck-irony-setup))
 #+END_SRC
