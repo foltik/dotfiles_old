@@ -154,8 +154,7 @@ Set stored auth tokens to be encrypted into emacs directory
 #+BEGIN_SRC emacs-lisp
 (setq auth-sources '("~/.emacs.d/authinfo.gpg"))
 #+END_SRC
-
-* Package Repo Config
+* Package Management
 ** Repo Location
 Let's start by configuring the repositories
 #+BEGIN_SRC emacs-lisp
@@ -188,6 +187,51 @@ https://github.com/jwiegley/use-package
 (setq use-package-verbose t)
 #+END_SRC
 
+** use-package extensions
+*** Utilities
+Some functions to help with creating custom use-package keywords
+#+BEGIN_SRC emacs-lisp
+(defun foltz-add-use-package-keyword (keyword deferring)
+    "Add the keyword to use-package at the proper index,
+     and to the deferring keywords list if necessary."
+    (setq use-package-keywords
+        (let ((idx (+ 1 (cl-position :hook use-package-keywords))))
+            (append
+                (seq-subseq use-package-keywords 0 idx)
+                (list keyword)
+                (nthcdr idx use-package-keywords))))
+    (when deferring
+        (setq use-package-deferring-keywords
+            (append use-package-deferring-keywords (list keyword)))))
+#+END_SRC
+*** :company
+#+BEGIN_SRC emacs-lisp
+(defun use-package-autoloads/:company (name keyword args)
+    (list (cons (cdr args) 'command)))
+
+(defun use-package-normalize/:company (name keyword args)
+    (use-package-only-one (symbol-name keyword) args
+        (lambda (label arg)
+            (if (and (listp arg) (not (listp (cdr arg))))
+                arg
+                (use-package-error "Usage - :company (mode . backend-name)")))))
+
+(defun use-package-handler/:company (name keyword def rest state)
+    (let ((body (use-package-process-keywords name rest state))
+          (name-string (use-package-as-string name))
+          (hook (intern (concat (symbol-name (car def)) use-package-hook-name-suffix)))
+          (backend (cdr def))
+          (fun (intern (concat "foltz-company-add-" (symbol-name (cdr def))))))
+        (use-package-concat
+            body
+            `((defun ,fun ()
+                (let ((backend (append (list ',backend) '(:with company-yasnippet))))
+                    (unless (member backend company-backends)
+                        (add-to-list 'company-backends backend))))
+              (add-hook ',hook #',fun)))))
+
+  (foltz-add-use-package-keyword :company nil)
+#+END_SRC
 * General Packages Configuration
 ** Modeline cleanup
 Adds support for =:diminish= in use-package declarations,
