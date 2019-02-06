@@ -136,7 +136,7 @@ Let's start by configuring the repositories
     (package-initialize)
 #+END_SRC
 
-** use-package
+** Use-Package
 use-package for installing packages
 https://github.com/jwiegley/use-package
 #+BEGIN_SRC emacs-lisp
@@ -153,50 +153,69 @@ https://github.com/jwiegley/use-package
 (setq use-package-verbose t)
 #+END_SRC
 
-** use-package extensions
+** Use-Package Extensions
 *** Utilities
 Some functions to help with creating custom use-package keywords
 #+BEGIN_SRC emacs-lisp
 (defun foltz-add-use-package-keyword (keyword deferring)
-    "Add the keyword to use-package at the proper index,
-     and to the deferring keywords list if necessary."
-    (setq use-package-keywords
-        (let ((idx (+ 1 (cl-position :hook use-package-keywords))))
-            (append
-                (seq-subseq use-package-keywords 0 idx)
-                (list keyword)
-                (nthcdr idx use-package-keywords))))
-    (when deferring
-        (setq use-package-deferring-keywords
-            (append use-package-deferring-keywords (list keyword)))))
+  "Add the keyword to use-package at the proper index,
+     and to the deferring keywords list if necessary"
+  (setq use-package-keywords
+    (let ((idx (+ 1 (position :hook use-package-keywords))))
+      (append
+        (seq-subseq use-package-keywords 0 idx)
+        (list keyword)
+        (nthcdr idx use-package-keywords))))
+  (when deferring
+    (setq use-package-deferring-keywords
+      (append use-package-deferring-keywords (list keyword)))))
 #+END_SRC
 *** :company
 #+BEGIN_SRC emacs-lisp
-(defun use-package-autoloads/:company (name keyword args)
-    (list (cons (cdr args) 'command)))
-
 (defun use-package-normalize/:company (name keyword args)
-    (use-package-only-one (symbol-name keyword) args
-        (lambda (label arg)
-            (if (and (listp arg) (not (listp (cdr arg))))
-                arg
-                (use-package-error "Usage - :company (mode . backend-name)")))))
+  (use-package-as-one (symbol-name keyword) args
+    (lambda (label arg)
+      (unless (or (consp arg) (use-package-non-nil-symbolp arg))
+        (use-package-error
+          (concat
+            label
+            "<symbol> or "
+            "(<symbol or list of symbols> . <symbol or function>) or "
+            "a list of these")))
+      (use-package-normalize-pairs
+        (lambda (k)
+          (or (use-package-non-nil-symbolp k)
+              (and (consp k)
+                   (not (cdr (last k)))
+                   (seq-every-p 'use-package-non-nil-symbolp k))))
+        #'use-package-recognize-function
+        name label arg))))
 
-(defun use-package-handler/:company (name keyword def rest state)
-    (let ((body (use-package-process-keywords name rest state))
-          (name-string (use-package-as-string name))
-          (hook (intern (concat (symbol-name (car def)) use-package-hook-name-suffix)))
-          (backend (cdr def))
-          (fun (intern (concat "foltz-company-add-" (symbol-name (cdr def))))))
-        (use-package-concat
-            body
-            `((defun ,fun ()
-                (let ((backend (append (list ',backend) '(:with company-yasnippet))))
-                    (unless (member backend company-backends)
-                        (add-to-list 'company-backends backend))))
-              (add-hook ',hook #',fun)))))
+(defun use-package-handler/:company (name keyword args rest state)
+  (use-package-concat
+    (use-package-process-keywords name rest state)
+    (mapcan
+      (lambda (def)
+        (let ((modes (car def))
+              (backend (cdr def))
+              (fun (intern (concat "foltz-company-add-" (symbol-name (cdr def))))))
+          (when backend
+            (append
+              `((defun ,fun ()
+                (let ((backend ,(append (list backend) '(:with company-yasnippet))))
+                  (unless (member backend company-backends)
+                    (add-to-list 'company-backends backend)))))
+              (mapcar
+                (lambda (mode)
+                  `(add-hook
+                    ',(intern (concat (symbol-name mode) use-package-hook-name-suffix))
+                    #',fun))
+                (if (use-package-non-nil-symbolp modes) (list modes) modes))))))
+        (use-package-normalize-commands args))))
 
-  (foltz-add-use-package-keyword :company nil)
+(defalias 'use-package-autoloads/:company 'use-package-autoloads-mode)
+
+(foltz-add-use-package-keyword :company nil)
 #+END_SRC
 * General Packages Configuration
 ** Modeline cleanup
@@ -712,29 +731,14 @@ company-quickhelp shows documentation popups
 when idling on a completion candidate.
 #+BEGIN_SRC emacs-lisp
 (use-package company
-    :init
-    (defun foltz-company-backend-with-yas (backend)
-        (if (and (listp backend) (member 'company-yasnippet backend))
-            backend
-            (append
-                (if (consp backend)
-                    backend
-                    (list backend))
-                '(:with company-yasnippet))))
-    (defun foltz-add-company-backend (backend)
-        (let ((backend-with-yas (foltz-company-backend-with-yas backend)))
-        (if (member backend-with-yas company-backends)
-            backend
-            (add-to-list 'company-backends backend-with-yas))))
-    :hook (prog-mode . company-mode)
-    :hook (cdlatex-mode . company-mode)
+    :hook ((prog-mode cdlatex-mode) . company-mode)
     :general
     (:keymaps 'company-active-map
      "C-SPC" 'company-abort)
     :custom
     (company-maximum-prefix-length 2)
     (company-idle-delay 0.2 "Decrease idle delay"))
-    
+
 (use-package company-quickhelp
     :hook (company-mode . company-quickhelp-mode))
 #+END_SRC
@@ -966,10 +970,7 @@ Beter editing of scripts for the fish shell
 Jedi for autocompletion sources
 #+BEGIN_SRC emacs-lisp
 (use-package company-jedi
-    :init
-    (defun foltz-add-company-python-backend ()
-        (foltz-add-company-backend 'company-jedi))
-    :hook (python-mode . foltz-add-company-python-backend))
+    :company python-mode)
 #+END_SRC
 
 *** Javascript
@@ -993,12 +994,9 @@ Company integration is done with company-web
     :custom
     (web-mode-code-indent-offset 4)
     (web-mode-indent-style 4))
-    
+
 (use-package company-web
-    :init
-    (defun foltz-add-company-web-backend ()
-        (foltz-add-company-backend 'company-web))
-    :hook (web-mode . foltz-add-company-web-backend))
+    :company web-mode)
 #+END_SRC
 
 *** JSON
@@ -1037,22 +1035,15 @@ company-auctex for completion.
         "e" 'TeX-command-run-all)
     :custom
     (TeX-auto-save t))
-    
+
 (use-package company-auctex
     :pin melpa
-    :init
-    (defun foltz-add-company-auctex-backend ()
-        (foltz-add-company-backend 'company-auctex))
-    :hook (LaTeX-mode . foltz-add-company-auctex-backend))
+    :company LaTeX-mode)
 
 (use-package company-math
-    :init
-    (defun foltz-add-company-math-backends ()
-        (foltz-add-company-backend 'company-math-symbols-latex)
-        (foltz-add-company-backend 'company-math-symbols-unicode)
-        (foltz-add-company-backend 'company-latex-commands))
-    :hook ((cdlatex-mode . foltz-add-company-math-backends)
-           (TeX-mode . foltz-add-company-math-backends)))
+    :company ((TeX-mode . company-math-symbols-latex)
+              (TeX-mode . company-math-symbols-unicode)
+              (TeX-mode . company-latex-commands)))
 #+END_SRC
 **** cdlatex
 ***** Environment
@@ -1120,17 +1111,10 @@ company-irony for company integration
            (irony-mode . irony-cdb-autosetup-compile-options)))
 
 (use-package company-irony
-    :init
-    (defun foltz-add-company-irony-backend ()
-        (foltz-add-company-backend 'company-irony))
-    :hook (irony-mode . foltz-add-company-irony-backend))
+    :company irony-mode)
 
 (use-package company-irony-c-headers
-    :init
-    (defun foltz-add-company-irony-c-headers ()
-        (message "c headers company added")
-        (foltz-add-company-backend 'company-irony-c-headers))
-    :hook (irony-mode . foltz-add-company-irony-c-headers))
+    :company irony-mode)
 
 (use-package flycheck-irony
     :hook (irony-mode . flycheck-irony-setup))
