@@ -161,7 +161,7 @@ Some functions to help with creating custom use-package keywords
   "Add the keyword to use-package at the proper index,
      and to the deferring keywords list if necessary"
   (setq use-package-keywords
-    (let ((idx (+ 1 (position :hook use-package-keywords))))
+    (let ((idx (+ 1 (cl-position :hook use-package-keywords))))
       (append
         (seq-subseq use-package-keywords 0 idx)
         (list keyword)
