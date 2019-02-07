@@ -661,8 +661,8 @@ Hotkeys for jumping to characters with =f=
     :general
     (:keymaps 'override
      :states 'normal
-     "f" 'avy-goto-char-in-line
-     "F" 'avy-goto-char))
+     "C-f" 'avy-goto-char-in-line
+     "C-F" 'avy-goto-char))
 #+END_SRC
 ** Discord Rich Presence
 #+BEGIN_SRC emacs-lisp
