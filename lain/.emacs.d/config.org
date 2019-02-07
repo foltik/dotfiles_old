@@ -149,7 +149,7 @@ https://github.com/jwiegley/use-package
 
 (setq use-package-compute-statistics t)
 (setq use-package-always-ensure t)
-(setq use-package-always-pin "melpa-stable")
+(setq use-package-always-pin "melpa")
 (setq use-package-verbose t)
 #+END_SRC
 
@@ -238,8 +238,7 @@ Pops up a buffer that helps you navigate and complete commands
 General manages my keybindings.
 
 #+BEGIN_SRC emacs-lisp
-(use-package general
-    :pin melpa)
+(use-package general)
 #+END_SRC
 
 *** Leader definitions
@@ -668,7 +667,6 @@ Hotkeys for jumping to characters with =f=
 ** Discord Rich Presence
 #+BEGIN_SRC emacs-lisp
 (use-package elcord
-    :pin melpa
     :commands elcord-mode
     :general
     (foltz-major-def
@@ -842,7 +840,6 @@ Built into emacs since 24.1
 *** RMSBolt
 #+BEGIN_SRC emacs-lisp
 (use-package rmsbolt
-    :pin melpa
     :commands rmsbolt-mode)
 #+END_SRC
 ** Syntax checking
@@ -912,7 +909,6 @@ Projectile provides project-level features like
 make shortcuts and file switching
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
-    :pin melpa
     :init
     (defun foltz-projectile-neotree () "Open NeoTree in the project root"
         (interactive)
@@ -987,7 +983,6 @@ Company integration is done with company-web
 
 #+BEGIN_SRC emacs-lisp
 (use-package web-mode
-    :pin melpa
     :mode ("\\.html\\'"
            "\\.php\\'"
            "\\.blade\\.")
@@ -1037,7 +1032,6 @@ company-auctex for completion.
     (TeX-auto-save t))
 
 (use-package company-auctex
-    :pin melpa
     :company LaTeX-mode)
 
 (use-package company-math
@@ -1079,7 +1073,6 @@ cdlatex adds better TeX-specific template expansions and other niceties.
         "TAB" 'rust-format-buffer))
 
 (use-package flycheck-rust
-    :pin melpa
     :hook (rust-mode . flycheck-rust-setup))
 
 (use-package racer
@@ -1104,7 +1097,6 @@ Irony handles enhanced C/C++ operations powered by clang
 company-irony for company integration
 #+BEGIN_SRC emacs-lisp
 (use-package irony
-    :pin melpa
     :after counsel
     :hook ((c++-mode   . irony-mode)
            (c-mode     . irony-mode)
