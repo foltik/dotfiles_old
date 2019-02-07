@@ -883,26 +883,28 @@ Yasnippet adds support for custom snippets
 It's magic git!
 Keybinds [[https://github.com/emacs-evil/evil-magit][here]]
 #+BEGIN_SRC emacs-lisp
-(use-package magit
-    :general
-    (foltz-git-def
-        "s" 'magit-status
-        "c" 'magit-commit
-        "d" 'magit-diff
-        "g" 'magit-grep)
-    :config
-    (use-package evil-magit
-        :after evil))
+  (use-package magit
+      :general
+      (foltz-git-def
+          "s" 'magit-status
+          "d" 'magit-diff
+          "g" 'magit-grep))
 #+END_SRC
-*** magithub
-Magic GitHub facilities for magit!
+It's *evil* magic git!
 #+BEGIN_SRC emacs-lisp
-(use-package magithub
+(use-package evil-magit
+  :after (evil magit))
+#+END_SRC
+*** forge
+Magic GitHub facilities for git forges such as GitHub and GitLab!
+#+BEGIN_SRC emacs-lisp
+  (use-package forge
     :after magit
+    :init
+    (setq foltz-forge-hosts
+      '(("git.lcsr.rutgers.edu" "git.lcsr.rutgers.edu/api/v4" "git.lcsr.rutgers.edu" forge-gitlab-repository)))
     :config
-    (magithub-feature-autoinject t)
-    :custom
-    (magithub-clone-default-directory "~/Documents/dev"))
+    (setq forge-alist (append forge-alist foltz-forge-hosts)))
 #+END_SRC
 ** Projects
 Projectile provides project-level features like
