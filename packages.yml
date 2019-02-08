@@ -31,6 +31,7 @@ Editors:
   - emacs:
       config:
         - .emacs.d/config.org
+        - .emacs.d/sandbox.org
         - .emacs.d/init.el
         - .local/share/applications/emacs.desktop
   - neovim

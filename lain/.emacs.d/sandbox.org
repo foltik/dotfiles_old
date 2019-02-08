@@ -1,26 +1,297 @@
+* Packaging
+** Package.el
+[[http://wikemacs.org/wiki/Package.el][Package.el]] is the built-in package manager in Emacs. This is where the fun begins.
+#+BEGIN_SRC emacs-lisp
+  (require 'package)
+  (setq package-archives
+        '(("gnu"          . "https://elpa.gnu.org/packages/")
+          ("melpa"        . "https://melpa.org/packages/")
+          ("melpa-stable" . "https://stable.melpa.org/packages/")
+          ("marmalade"    . "https://marmalade-repo.org/packages/")
+          ("org"          . "https://orgmode.org/elpa/")))
+  (setq package-enable-at-startup nil)
+  (package-initialize)
+#+END_SRC
+** use-package
+[[https://github.com/jwiegley/use-package][use-package]] is a nifty macro that interfaces with ~Package.el~, keeping package-specific
+configuration all in once place. It's pretty much the basis of this entire config.
+#+BEGIN_SRC emacs-lisp
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package))
+
+  (eval-when-compile
+    (require 'use-package))
+
+  (setq use-package-compute-statistics t)
+  (setq use-package-always-ensure t)
+  (setq use-package-always-pin "melpa")
+  (setq use-package-verbose t)
+#+END_SRC
+*** Custom Keywords
+A few useful ~:keyword~ macros that extend the vanilla ~use-package~ functionality.
+**** HelpersHH
+Define some helpers for bootstrapping the custom keywords.
+#+BEGIN_SRC emacs-lisp
+  (defun foltz-add-use-package-keyword (keyword deferring)
+    "Add a KEYWORD, which may imply DEFERRING, to the use-package keyword list."
+    (setq use-package-keywords
+          (let ((idx (+ 1 (cl-position :hook use-package-keywords))))
+            (append
+             (seq-subseq use-package-keywords 0 idx)
+             (list keyword)
+             (nthcdr idx use-package-keywords))))
+    (when deferring
+      (setq use-package-deferring-keywords
+            (append use-package-deferring-keywords (list keyword)))))
+#+END_SRC
+**** :company
+#+BEGIN_SRC emacs-lisp
+  (defun use-package-normalize/:company (name keyword args)
+    (use-package-as-one (symbol-name keyword) args
+      (lambda (label arg)
+        (unless (or (consp arg) (use-package-non-nil-symbolp arg))
+          (use-package-error
+           (concat
+            label
+            "<symbol> or "
+            "(<symbol or list of symbols> . <symbol or function>) or "
+            "a list of these")))
+        (use-package-normalize-pairs
+         (lambda (k)
+           (or (use-package-non-nil-symbolp k)
+              (and (consp k)
+                 (not (cdr (last k)))
+                 (seq-every-p 'use-package-non-nil-symbolp k))))
+         #'use-package-recognize-function
+         name label arg))))
+
+  (defun use-package-handler/:company (name keyword args rest state)
+    (use-package-concat
+     (use-package-process-keywords name rest state)
+     (mapcan
+      (lambda (def)
+        (let ((modes (car def))
+              (backend (cdr def))
+              (fun (intern (concat "jf-company-add-" (symbol-name (cdr def))))))
+          (when backend
+            (append
+             `((defun ,fun ()
+                 (let ((backend ,(append (list backend) '(:with company-yasnippet))))
+                   (unless (member backend company-backends)
+                     (add-to-list 'company-backends backend)))))
+             (mapcar
+              (lambda (mode)
+                `(add-hook
+                  ',(intern (concat (symbol-name mode) use-package-hook-name-suffix))
+                  #',fun))
+              (if (use-package-non-nil-symbolp modes) (list modes) modes))))))
+      (use-package-normalize-commands args))))
+
+  (defalias 'use-package-autoloads/:company 'use-package-autoloads-mode)
+
+  (foltz-add-use-package-keyword :company nil)
+#+END_SRC
+* Emacs
+** Defaults
+*** Customize
+Make changes in ~M-x customize~ go somewhere other than being schlunked into =init.el=.
+#+BEGIN_SRC emacs-lisp
+  (setq custom-file (concat user-emacs-directory "_customize.el"))
+  (load custom-file t)
+#+END_SRC
+*** Bell
+Shut up, emacs.
+#+BEGIN_SRC emacs-lisp
+  (setq ring-bell-function #'ignore)
+#+END_SRC
+*** Prompts
+Make ~yes-or-no~ prompts ask for ~y-or-n~ instead. Saves loads of time™.
+#+BEGIN_SRC emacs-lisp
+  (defalias 'yes-or-no-p #'y-or-n-p)
+#+END_SRC
+*** Backup Files
+By default, emacs gunks up every folder with =file~= backups 
+and =#file#= lockfiles. Schlunk them all in =/tmp= instead.
+#+BEGIN_SRC emacs-lisp
+  (setq backup-directory-alist
+        `((".*" . ,temporary-file-directory)))
+  (setq auto-save-file-name-transforms
+        `((".*" ,temporary-file-directory t)))
+#+END_SRC
+*** auth-source
+GPG encrypt stored auth tokens from [[https://www.gnu.org/software/emacs/manual/html_mono/auth.html][auth-source]] instead of storing them in plaintext.
+#+BEGIN_SRC emacs-lisp
+  (setq auth-sources '("~/.emacs.d/authinfo.gpg"))
+#+END_SRC
+** UI
+*** Font
+Engage a nice coding font.
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'default-frame-alist '(font . "Fira Code 12"))
+  (set-face-attribute 'default t :font "Fira Code 12")
+#+END_SRC
+*** Menu Bar
+Disable the useless cruft at the top of the screen.
+#+BEGIN_SRC emacs-lisp
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+#+END_SRC
+** Themes
+*** pywal
+Fancy dynamic color scheme generation from desktop wallpapers.
+Requires additional setup on the machine itself.
+#+BEGIN_SRC emacs-lisp
+  (defvar jf-theme-pywal-path "~/.cache/wal/colors.el" "Path to the colorscheme generated by pywal.")
+
+  (defun jf-theme-pywal ()
+    (load-file jf-theme-pywal-path))
+
+  (when (= 'jf-theme 'jf-theme-pywal)
+    (require 'filenotify)
+    (file-notify-add-watch jf-theme-pywal-path '(change) #'jf-theme-pywal))
+#+END_SRC
+*** spacemacs
+This theme is pretty fancy and has lots of supported modes.
+#+BEGIN_SRC emacs-lisp
+  (unless (package-installed-p 'spacemacs-theme)
+    (package-install 'spacemacs-theme))
+
+  (defun jf-theme-spacemacs ()
+    (load-theme 'spacemacs-dark))
+#+END_SRC
+*** Helpers
+#+BEGIN_SRC emacs-lisp
+  (defvar jf-theme #'jf-theme-pywal "Theme function to call.")
+
+  (defun jf-apply-theme ()
+    "Apply the current theme as set by jf-theme."
+    (funcall jf-theme))
+
+  (jf-apply-theme)
+#+END_SRC
+* Keybinds
+** General
+[[https://github.com/noctuid/general.el][General]] is an excellent keybind manager that adds all kinds of
+cool stuff like leader keys from Vim.
+#+BEGIN_SRC emacs-lisp
+(use-package general)
+#+END_SRC
+** which-key
+[[https://github.com/justbur/emacs-which-key][which-key]] displays a popup in the minibuffer that shows 
+keybindings following incomplete commands.
+#+BEGIN_SRC emacs-lisp
+  (use-package which-key
+      :diminish
+      :config
+      (which-key-mode))
+#+END_SRC
+** Leaders
+*** Helpers
+Some helper functions to aid in defining leader keys and prefixes.
+#+BEGIN_SRC emacs-lisp
+  (defvar jf-leader-keys
+    '(("b" . "buffers")
+      ("f" . "files")
+      ("g" . "git")
+      ("h" . "help")
+      ("o" . "org")
+      ("p" . "projects")
+      ("w" . "windows")))
+
+  (general-create-definer jf-leader-def
+    :keymaps 'override
+    :states '(normal insert emacs)
+    :prefix "SPC"
+    :non-normal-prefix "C-SPC")
+
+  (dolist (def jf-leader-keys)
+    (let ((key (car def))
+          (name (cdr def)))
+      (jf-leader-def key `('(:ignore t :wk ,(concat name "..."))))
+      (general-create-definer (intern (concat "jf-" name "-def"))
+        :keymaps 'override
+        :states '(normal insert emacs)
+        :prefix (concat "SPC " key)
+        :non-normal-prefix (concat "C-SPC " key)
+        :prefix-map (concat "jf-" key "-map"))))
+#+END_SRC
+*** Definitions
+* Communication
+* Web
+* Tools
+* Programming
+** Checkers
+** Completion
+** Debugging
+** Formatting
+** Projects
+** Tools
+** Languages
+* Vim
+** Evil
+[[https://github.com/emacs-evil/evil][Evil]] is pretty much the entirety of Vim in Emacs.
+#+BEGIN_SRC emacs-lisp
+  (use-package evil
+    :diminish undo-tree-mode
+
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+
+    (defun foltz-window-split ()
+      (interactive)
+      (evil-window-split)
+      (evil-window-down 1))
+    (defun foltz-window-vsplit ()
+      (interactive)
+      (evil-window-vsplit)
+      (evil-window-right 1))
+
+    :config
+    (evil-mode t))
+#+END_SRC
+** Evil Collection
+[[https://github.com/emacs-evil/evil-collection][Evil Collection]] adds Evil bindings for all the parts of Emacs that Evil
+doesn't cover properly by default.
+#+BEGIN_SRC emacs-lisp
+  (use-package evil-collection
+    :after evil
+    :config
+    (evil-collection-init
+     '(calendar
+       cmake-mode
+       company
+       custom
+       debug
+       dired
+       doc-view
+       elisp-mode
+       elisp-refs
+       eshell
+       eval-sexp-fu
+       flycheck
+       flymake
+       grep
+       help
+       ibuffer
+       image
+       image-dired
+       info
+       ivy
+       js2-mode
+       log-view
+       man
+       neotree
+       python
+       racer
+       realgud
+       which-key)))
+#+END_SRC
+** Evil Leader
+* --- Here Be Dragons ---
 * Emacs Config
-** Font
-Set the font to something nice that will display ligntures
-#+BEGIN_SRC emacs-lisp
-(add-to-list 'default-frame-alist '(font . "Fira Code 12"))
-(set-face-attribute 'default t :font "Fira Code 12")
-#+END_SRC
-
-** Customize file
-Makes it so the customize data isn't schlunked in my init.el
-#+BEGIN_SRC emacs-lisp
-(setq custom-file (concat user-emacs-directory "_customize.el"))
-(load custom-file t)
-#+END_SRC
-
-** Remove menu bar
-Disable the useless cruft at the top of the screen   
-#+BEGIN_SRC emacs-lisp
-(menu-bar-mode 0)
-(tool-bar-mode 0)
-(scroll-bar-mode -1)
-#+END_SRC
-   
 ** Show matching parenthesis
 Shows matching parenthesis  
 #+BEGIN_SRC emacs-lisp
@@ -48,12 +319,6 @@ active, the second when it's inactive.
 (setq scroll-conservatively 100) ;; don't scroll a metric boatload when bottom is hit
 #+END_SRC
 
-** Disable bell
-Shut up, emacs.
-#+BEGIN_SRC emacs-lisp
-(setq ring-bell-function 'ignore)
-#+END_SRC
-   
 ** Relative line numbers
 Use the default emacs relative line numbers, but switch to absolute lines when in insert mode.
 #+BEGIN_SRC emacs-lisp
@@ -74,149 +339,6 @@ Use the default emacs relative line numbers, but switch to absolute lines when i
 (global-display-line-numbers-mode t)
 #+END_SRC
 
-** y or n prompts
-Make yes-or-no prompts ask for y or n instead
-#+BEGIN_SRC emacs-lisp
-(defalias 'yes-or-no-p 'y-or-n-p)
-#+END_SRC
-   
-** Keep backup files and lockfiles out of the way
-By default, emacs makes files like =file~= and =#file#= and clutters up
-my projects. Instead, store them in =/tmp=!
-#+BEGIN_SRC emacs-lisp
-(setq backup-directory-alist
-    `((".*" . ,temporary-file-directory)))
-(setq auto-save-file-name-transforms
-    `((".*" ,temporary-file-directory t)))
-(setq create-lockfiles nil)
-#+END_SRC
-** Customize the terminal
-Use fish shell in ansi-term
-#+BEGIN_SRC emacs-lisp
-(defadvice ansi-term (before force-bash)
-    (interactive '("/usr/bin/fish")))
-(ad-activate 'ansi-term)
-#+END_SRC
-
-** Theme
-#+BEGIN_SRC emacs-lisp
-(defvar foltz-wal-theme-path "~/.cache/wal/colors.el")
-(defun foltz-apply-theme ()
-    (interactive)
-    (load-file foltz-wal-theme-path))
-
-(defun foltz-theme-callback (event)
-  (foltz-apply-theme))
-
-(if (file-exists-p foltz-wal-theme-path)
-    (progn
-       (require 'filenotify)
-       (file-notify-add-watch foltz-wal-theme-path '(change) 'foltz-theme-callback)
-       (foltz-apply-theme))
-    (load-theme spacemacs-dark))
-#+END_SRC
-** Auth storage location
-Set stored auth tokens to be encrypted into emacs directory
-#+BEGIN_SRC emacs-lisp
-(setq auth-sources '("~/.emacs.d/authinfo.gpg"))
-#+END_SRC
-* Package Management
-** Repo Location
-Let's start by configuring the repositories
-#+BEGIN_SRC emacs-lisp
-    (require 'package)
-
-    (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
-                             ("marmalade" . "https://marmalade-repo.org/packages/")
-                             ("melpa-stable" . "https://stable.melpa.org/packages/")
-                             ("melpa" . "https://melpa.org/packages/")
-                             ("org" . "https://orgmode.org/elpa/")))
-    (setq package-enable-at-startup nil)
-    
-    (package-initialize)
-#+END_SRC
-
-** Use-Package
-use-package for installing packages
-https://github.com/jwiegley/use-package
-#+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'use-package)
-    (package-refresh-contents)
-    (package-install 'use-package))
-
-(eval-when-compile
-    (require 'use-package))
-
-(setq use-package-compute-statistics t)
-(setq use-package-always-ensure t)
-(setq use-package-always-pin "melpa")
-(setq use-package-verbose t)
-#+END_SRC
-
-** Use-Package Extensions
-*** Utilities
-Some functions to help with creating custom use-package keywords
-#+BEGIN_SRC emacs-lisp
-(defun foltz-add-use-package-keyword (keyword deferring)
-  "Add the keyword to use-package at the proper index,
-     and to the deferring keywords list if necessary"
-  (setq use-package-keywords
-    (let ((idx (+ 1 (cl-position :hook use-package-keywords))))
-      (append
-        (seq-subseq use-package-keywords 0 idx)
-        (list keyword)
-        (nthcdr idx use-package-keywords))))
-  (when deferring
-    (setq use-package-deferring-keywords
-      (append use-package-deferring-keywords (list keyword)))))
-#+END_SRC
-*** :company
-#+BEGIN_SRC emacs-lisp
-(defun use-package-normalize/:company (name keyword args)
-  (use-package-as-one (symbol-name keyword) args
-    (lambda (label arg)
-      (unless (or (consp arg) (use-package-non-nil-symbolp arg))
-        (use-package-error
-          (concat
-            label
-            "<symbol> or "
-            "(<symbol or list of symbols> . <symbol or function>) or "
-            "a list of these")))
-      (use-package-normalize-pairs
-        (lambda (k)
-          (or (use-package-non-nil-symbolp k)
-              (and (consp k)
-                   (not (cdr (last k)))
-                   (seq-every-p 'use-package-non-nil-symbolp k))))
-        #'use-package-recognize-function
-        name label arg))))
-
-(defun use-package-handler/:company (name keyword args rest state)
-  (use-package-concat
-    (use-package-process-keywords name rest state)
-    (mapcan
-      (lambda (def)
-        (let ((modes (car def))
-              (backend (cdr def))
-              (fun (intern (concat "foltz-company-add-" (symbol-name (cdr def))))))
-          (when backend
-            (append
-              `((defun ,fun ()
-                (let ((backend ,(append (list backend) '(:with company-yasnippet))))
-                  (unless (member backend company-backends)
-                    (add-to-list 'company-backends backend)))))
-              (mapcar
-                (lambda (mode)
-                  `(add-hook
-                    ',(intern (concat (symbol-name mode) use-package-hook-name-suffix))
-                    #',fun))
-                (if (use-package-non-nil-symbolp modes) (list modes) modes))))))
-        (use-package-normalize-commands args))))
-
-(defalias 'use-package-autoloads/:company 'use-package-autoloads-mode)
-
-(foltz-add-use-package-keyword :company nil)
-#+END_SRC
 * General Packages Configuration
 ** Modeline cleanup
 Adds support for =:diminish= in use-package declarations,
@@ -233,14 +355,7 @@ Pops up a buffer that helps you navigate and complete commands
     :config
     (which-key-mode))
 #+END_SRC
-
 ** Keybind Manager
-General manages my keybindings.
-
-#+BEGIN_SRC emacs-lisp
-(use-package general)
-#+END_SRC
-
 *** Leader definitions
 Create a leader key, like the \ in vim.
 In this case, =SPC= is used as a leader. Following the leader,
@@ -354,69 +469,48 @@ Evil is pretty much the entirety of Vim in Emacs.
 [[https://github.com/Somelauw/evil-org-mode][evil-org]] adds nice bindings to org-mode.
 
 #+BEGIN_SRC emacs-lisp
-(use-package evil
-    :after general
-    :diminish undo-tree-mode
-    :init
-    (setq evil-want-integration nil)
-    (setq evil-want-keybinding nil)
+  (use-package evil-leader
+      :after evil
+      :init
 
-    :config
-    (evil-mode t)
+      :general
+      (:keymaps 'override
+       :states 'normal
+       "U" 'undo-tree-visualize)
+      (foltz-window-def
+          "-" 'foltz-window-split
+          "=" 'foltz-window-vsplit
+          "h" 'evil-window-left
+          "j" 'evil-window-down
+          "k" 'evil-window-up
+          "l" 'evil-window-right
+          "H" 'evil-window-far-left
+          "J" 'evil-window-move-very-bottom
+          "K" 'evil-window-move-very-top
+          "L" 'evil-window-far-right
+          "<" 'evil-window-decrease-width
+          ">" 'evil-window-increase-width
+          "^" 'evil-window-decrease-height
+          "%" 'evil-window-increase-height
+          "n" 'evil-window-new
+          "c" 'evil-window-delete
+          "w" 'evil-window-next
+          "W" 'evil-window-prev
+          "r" 'evil-window-rotate-downwards
+          "|" 'evil-window-set-width
+          "_" 'evil-window-set-height)
 
-    :custom
-    (evil-shift-width 4 "Set indent to 4 spaces"))
+      :config
+      (global-evil-leader-mode))
 
-(use-package evil-leader
-    :after evil
-    :init
-    (defun foltz-window-split ()
-        (interactive)
-        (evil-window-split)
-        (evil-window-down 1))
-    (defun foltz-window-vsplit ()
-        (interactive)
-        (evil-window-vsplit)
-        (evil-window-right 1))
-
-    :general
-    (:keymaps 'override
-     :states 'normal
-     "U" 'undo-tree-visualize)
-    (foltz-window-def
-        "-" 'foltz-window-split
-        "=" 'foltz-window-vsplit
-        "h" 'evil-window-left
-        "j" 'evil-window-down
-        "k" 'evil-window-up
-        "l" 'evil-window-right
-        "H" 'evil-window-far-left
-        "J" 'evil-window-move-very-bottom
-        "K" 'evil-window-move-very-top
-        "L" 'evil-window-far-right
-        "<" 'evil-window-decrease-width
-        ">" 'evil-window-increase-width
-        "^" 'evil-window-decrease-height
-        "%" 'evil-window-increase-height
-        "n" 'evil-window-new
-        "c" 'evil-window-delete
-        "w" 'evil-window-next
-        "W" 'evil-window-prev
-        "r" 'evil-window-rotate-downwards
-        "|" 'evil-window-set-width
-        "_" 'evil-window-set-height)
-
-    :config
-    (global-evil-leader-mode))
-
-(use-package evil-org
-    :after (evil org)
-    :hook (org-mode . evil-org-mode)
-    :config
-    (add-hook 'evil-org-mode (lambda () 
-        (evil-org-set-key-theme
-            '(textobjects insert navigation 
-              additional shift todo calendar)))))
+  (use-package evil-org
+      :after (evil org)
+      :hook (org-mode . evil-org-mode)
+      :config
+      (add-hook 'evil-org-mode (lambda () 
+          (evil-org-set-key-theme
+              '(textobjects insert navigation 
+                additional shift todo calendar)))))
 #+END_SRC
 
 ** Startup dashboard
@@ -630,8 +724,8 @@ emacs operations.
 (use-package swiper
     :after evil
     :general
-    (:keymaps 'override 
-     :states 'normal 
+    (:keymaps 'override
+     :states 'normal
      "/" 'swiper
      "n" 'evil-search-previous
      "N" 'evil-search-next))
@@ -729,6 +823,7 @@ company-quickhelp shows documentation popups
 when idling on a completion candidate.
 #+BEGIN_SRC emacs-lisp
 (use-package company
+    :defer t
     :hook ((prog-mode cdlatex-mode) . company-mode)
     :general
     (:keymaps 'company-active-map
@@ -738,7 +833,8 @@ when idling on a completion candidate.
     (company-idle-delay 0.2 "Decrease idle delay"))
 
 (use-package company-quickhelp
-    :hook (company-mode . company-quickhelp-mode))
+  :after company
+  :hook (company-mode . company-quickhelp-mode))
 #+END_SRC
 *** Smart Parentheses
 smartparens handles parens for languages that aren't lispy,
@@ -754,7 +850,7 @@ Keybinds in =M-x sp-cheat-sheet=.
     :commands smartparens-strict-mode
     :config
     (require 'smartparens-config))
-    
+
 (use-package evil-smartparens
     :hook (smartparens-enabled . evil-smartparens-mode))
 #+END_SRC
@@ -847,9 +943,7 @@ Built into emacs since 24.1
 Flycheck does syntax highlighting in a few languages
 #+BEGIN_SRC emacs-lisp
 (use-package flycheck
-    :hook (prog-mode . flycheck-mode)
-    :custom
-    (flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
+    :hook (prog-mode . flycheck-mode))
 #+END_SRC
 
 *** Column 80 Highlight
@@ -885,10 +979,12 @@ Yasnippet adds support for custom snippets
 It's magic git!
 Keybinds [[https://github.com/emacs-evil/evil-magit][here]]
 #+BEGIN_SRC emacs-lisp
-(use-package magit
-  :general
-  (foltz-git-def
-    "s" 'magit-status))
+  (use-package magit
+      :general
+      (foltz-git-def
+          "s" 'magit-status
+          "d" 'magit-diff
+          "g" 'magit-grep))
 #+END_SRC
 It's *evil* magic git!
 #+BEGIN_SRC emacs-lisp
