@@ -744,5 +744,3 @@ company-irony for company integration
 **** Hotkeys
 #+BEGIN_SRC emacs-lisp
 #+END_SRC
-* --- Here Be Dragons ---
-* Emacs Config
