@@ -30,67 +30,61 @@ configuration all in once place. It's pretty much the basis of this entire confi
 #+END_SRC
 *** Custom Keywords
 A few useful =:keyword= macros that extend the vanilla =use-package= functionality.
-**** Helpers
-Define some helpers for bootstrapping the custom keywords.
-#+BEGIN_SRC emacs-lisp
-  (defun foltz-add-use-package-keyword (keyword deferring)
-    "Add a KEYWORD, which may imply DEFERRING, to the use-package keyword list."
-    (setq use-package-keywords
-          (let ((idx (+ 1 (cl-position :hook use-package-keywords))))
-            (append
-             (seq-subseq use-package-keywords 0 idx)
-             (list keyword)
-             (nthcdr idx use-package-keywords))))
-    (when deferring
-      (setq use-package-deferring-keywords
-            (append use-package-deferring-keywords (list keyword)))))
-#+END_SRC
 **** :company
 #+BEGIN_SRC emacs-lisp
-  (defun use-package-normalize/:company (name keyword args)
+  (defun use-package-company-normalize (name keyword args)
+    "Normalize the KEYWORD with NAME :company with arguments ARGS into a list of pairs for the handler."
     (use-package-as-one (symbol-name keyword) args
       (lambda (label arg)
         (unless (or (consp arg) (use-package-non-nil-symbolp arg))
           (use-package-error
-           (concat
-            label
-            "<symbol> or "
-            "(<symbol or list of symbols> . <symbol or function>) or "
-            "a list of these")))
+            (concat
+              label
+              "<symbol> or "
+              "(<symbol or list of symbols> . <symbol or function>) or "
+              "a list of these")))
         (use-package-normalize-pairs
-         (lambda (k)
-           (or (use-package-non-nil-symbolp k)
-              (and (consp k)
-                 (not (cdr (last k)))
-                 (seq-every-p 'use-package-non-nil-symbolp k))))
-         #'use-package-recognize-function
-         name label arg))))
+          (lambda (k)
+            (or (use-package-non-nil-symbolp k)
+                (and (consp k)
+                     (not (cdr (last k)))
+                     (seq-every-p 'use-package-non-nil-symbolp k))))
+          #'use-package-recognize-function
+          name label arg))))
 
-  (defun use-package-handler/:company (name keyword args rest state)
+  ;;;###autoload
+  (defun use-package-company-handler (name _keyword args rest state)
+    "Generate a function and hook from each pair in NAME ARGS for the keyword with NAME :company, appending the forms to the ‘use-package’ declaration specified by REST and STATE."
     (use-package-concat
      (use-package-process-keywords name rest state)
      (mapcan
       (lambda (def)
         (let ((modes (car def))
               (backend (cdr def))
-              (fun (intern (concat "jf-company-add-" (symbol-name (cdr def))))))
+              (fun (intern (concat "use-package-company-add-" (symbol-name (cdr def))))))
           (when backend
             (append
              `((defun ,fun ()
-                 (let ((backend ,(append (list backend) '(:with company-yasnippet))))
-                   (unless (member backend company-backends)
-                     (add-to-list 'company-backends backend)))))
+                 (setq-local company-backends
+                             (append company-backends '(,backend)))))
              (mapcar
               (lambda (mode)
                 `(add-hook
-                  ',(intern (concat (symbol-name mode) use-package-hook-name-suffix))
+                  ',(derived-mode-hook-name mode)
                   #',fun))
               (if (use-package-non-nil-symbolp modes) (list modes) modes))))))
       (use-package-normalize-commands args))))
 
+  (defalias 'use-package-normalize/:company 'use-package-company-normalize)
+  (defalias 'use-package-handler/:company 'use-package-company-handler)
   (defalias 'use-package-autoloads/:company 'use-package-autoloads-mode)
 
-  (foltz-add-use-package-keyword :company nil)
+  (setq use-package-keywords
+    (let ((idx (+ 1 (cl-position :hook use-package-keywords))))
+      (append
+        (seq-subseq use-package-keywords 0 idx)
+        (list :company)
+        (nthcdr idx use-package-keywords))))
 #+END_SRC
 * Keybinds
 ** which-key
