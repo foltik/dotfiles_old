@@ -153,17 +153,31 @@ Also set up a leader key and prefixes, like =\= in Vim.
     (setq evil-want-integration t)
     (setq evil-want-keybinding nil)
 
-    (defun foltz-window-split ()
+    (defun jf-window-split ()
       (interactive)
       (evil-window-split)
       (evil-window-down 1))
-    (defun foltz-window-vsplit ()
+    (defun jf-window-vsplit ()
       (interactive)
       (evil-window-vsplit)
       (evil-window-right 1))
 
     :config
-    (evil-mode t))
+    (evil-mode t)
+
+    (jf-windows-def
+     "-" #'jf-window-split
+     "=" #'jf-window-vsplit
+     "b" #'balance-windows
+     "H" #'evil-window-far-left
+     "J" #'evil-window-bottom
+     "K" #'evil-window-top
+     "L" #'evil-window-far-right
+     "h" #'evil-window-left
+     "j" #'evil-window-right
+     "k" #'evil-window-down
+     "l" #'evil-window-right
+     "o" #'other-frame))
 #+END_SRC
 ** Evil Collection
 [[https://github.com/emacs-evil/evil-collection][Evil Collection]] adds Evil bindings for all the parts of Emacs that Evil
