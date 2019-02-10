@@ -354,6 +354,14 @@ Print more stuff when running =C-x C-e= or =(eval-last-sexp)=
 #+BEGIN_SRC emacs-lisp
   (setq eval-expression-print-level 100)
 #+END_SRC
+*** GC in Minibuffer
+Don't garbage collect while the minibuffer is open, as heavy
+things like completion and searches are happening and will
+slow down with many garbage collections.
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'minibuffer-setup-hook #'jf-inhibit-gc)
+  (add-hook 'minibuffer-exit-hook  #'jf-resume-gc)
+#+END_SRC
 ** UI
 *** Font
 Engage a nice coding font.
@@ -414,7 +422,10 @@ Show a cool custom dashboard buffer on startup.
 
     :custom
     (dashboard-startup-banner 'logo)
-    (dashboard-banner-logo-title "Welcome to Electronic Macs")
+    (dashboard-banner-logo-title
+     (format "Welcome to Electronic Macs. Ready in %.2f seconds with %d GCs."
+             (float-time (time-subtract after-init-time before-init-time))
+             gcs-done))
     (dashboard-items
      '((recents . 5)
        (agenda)
