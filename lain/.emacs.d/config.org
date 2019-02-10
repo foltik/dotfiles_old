@@ -151,10 +151,7 @@ Also set up a leader key and prefixes, like =\= in Vim.
   (use-package evil
     :diminish undo-tree-mode
 
-    :init
-    (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
-
+    :preface
     (defun jf-window-split ()
       (interactive)
       (evil-window-split)
@@ -179,7 +176,12 @@ Also set up a leader key and prefixes, like =\= in Vim.
      "j" #'evil-window-right
      "k" #'evil-window-down
      "l" #'evil-window-right
-     "o" #'other-frame))
+     "o" #'other-frame)
+
+    :custom
+    (evil-want-integration t)
+    (evil-want-keybinding nil)
+    (evil-want-fine-undo t))
 #+END_SRC
 ** Evil Collection
 [[https://github.com/emacs-evil/evil-collection][Evil Collection]] adds Evil bindings for all the parts of Emacs that Evil
