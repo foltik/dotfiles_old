@@ -313,14 +313,6 @@ and =#file#= lockfiles. Schlunk them all in =/tmp= instead.
   (setq auto-save-file-name-transforms
         `((".*" ,temporary-file-directory t)))
 #+END_SRC
-*** Nicer Scrolling
-Keep the cursor away from the edges when scrolling,
-rather than hitting the bottom and scrolling a metric
-boatload off the screen.
-#+BEGIN_SRC emacs-lisp
-  (require 'smooth-scrolling)
-#+END_SRC
-
 *** Secure auth-source
 GPG encrypt stored auth tokens from [[https://www.gnu.org/software/emacs/manual/html_mono/auth.html][auth-source]] instead of storing them in plaintext.
 #+BEGIN_SRC emacs-lisp
@@ -401,6 +393,13 @@ Shows matching parenthesis
 (require 'paren)
 (setq show-paren-delay 0)
 (show-paren-mode)
+#+END_SRC
+*** Scrolling
+Scroll smooth-ish-ly instead of jarring jumps.
+#+BEGIN_SRC emacs-lisp
+  (use-package smooth-scroll
+    :config
+    (smooth-scroll-mode t))
 #+END_SRC
 *** Dashboard
 Show a cool custom dashboard buffer on startup.
