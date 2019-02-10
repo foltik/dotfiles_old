@@ -707,7 +707,8 @@ Allows retrieving OpenWeatherMap forecasts in the minibuffer.
     (jf-apps-def
      "w" #'sunshine-forecast)
     :custom
-    (sunshine-location "New York, US")
+    (sunshine-location "Piscataway, US")
+    (sunshine-units 'metric)
     (sunshine-appid "7caf100277f14845e7f354c6590a09cb")
     (sunshine-show-icons t))
 #+END_SRC
