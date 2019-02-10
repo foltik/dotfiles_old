@@ -19,4 +19,6 @@
 (org-babel-load-file jf-config-file)
 (jf-resume-gc)
 
-(message "-> Initialized in %s" (emacs-init-time))
+(message "-> Initialized in %s with %d GCs."
+	 (float-time (time-subtract after-init-time before-init-time))
+	 gcs-done)
