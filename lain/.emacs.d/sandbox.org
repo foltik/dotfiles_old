@@ -462,18 +462,237 @@ active, the second when it's inactive.
 
   (jf-apply-theme)
 #+END_SRC
+* Organization
+** Capture Templates
+All capture templates, from tasks to bookmarks.
+*** Refile Targets
+Goodize the refiling targets to allow refiling to arbitrary subtrees.
+#+BEGIN_SRC emacs-lisp
+  (defun jf-org-capture-refile ()
+    (interactive)
+    (setq-local org-refile-targets '((nil :maxlevel . 5)))
+    (setq-local org-refile-use-outline-path t)
+    (org-refile))
+#+END_SRC
+*** Tasks
+#+BEGIN_SRC emacs-lisp
+  (setq jf-org-capture-task-templates
+        '(("t" "Todo")
+          ("tg" "General" entry
+           (file+headline "notes.org" "Todo")
+           "** TODO %^{todo}\nNotes: %?\n")
+          ("tt" "General (Date)" entry
+           (file+olp+datetree "notes.org")
+           "*** TODO %^{todo}\nDue: %^t\nNotes: %?\n")
+          ("tT" "General (Date+Time)" entry
+           (file+olp+datetree "notes.org")
+           "*** TODO %^{todo}\nDue: %^T\nNotes: %?\n")
+          ("ts" "School (Date)" entry
+           (file+olp+datetree "notes.org")
+           "*** TODO %^{todo}\nDue: %^t\nClass: %^{class}\nNotes: %?\n")
+          ("tS" "School (Date+Time)" entry
+           (file+olp+datetree "notes.org")
+           "*** TODO %^{todo}\nDue: %^T\nClass: %^{class}\nNotes: %?\n")))
+#+END_SRC
+*** Bookmarks
+#+BEGIN_SRC emacs-lisp
+  (setq jf-org-capture-bookmark-templates
+        '(("b" "Bookmark" entry
+           (file+headline "links.org" "Unsorted Links")
+           "** [[%^{link}][%^{name}]]\nCreated: %U\nAbout: %^{description}%?\n")))
+#+END_SRC
+*** Personal
+#+BEGIN_SRC emacs-lisp
+  (setq jf-org-capture-personal-templates
+        '(("j" "Journal")
+          ("jj" "Journal Entry" entry
+           (file+olp+datetree "journal.org")
+           "**** Today's Events\n%?")
+          ("jt" "Thoughts" entry
+           (file+headline "notes.org" "Thoughts")
+           "** %^{summary}\n%U\n%?")
+          ("jd" "Dream Journal Entry" entry
+           (file+olp+datetree "dreams.org")
+           "**** Dream\n%?")))
+#+END_SRC
+*** Protocol
+#+BEGIN_SRC emacs-lisp
+  (setq jf-org-capture-protocol-templates
+        '(("w" "Website" entry
+           (file+headline "sites.org" "Unsorted Sites")
+           "** [[%:link][%:description%?]]\nCreated: %U\nAbout: %^{description}%?\n%:initial")))
+#+END_SRC
+*** All
+Tie it all together.
+#+BEGIN_SRC emacs-lisp
+  (setq jf-org-capture-templates
+        (append
+         jf-org-capture-task-templates
+         jf-org-capture-personal-templates
+         jf-org-capture-bookmark-templates
+         jf-org-capture-protocol-templates))
+#+END_SRC
+** Structure Templates
+Defines expansions with =<= followed by a string in org-mode.
+*** Source Blocks
+#+BEGIN_SRC emacs-lisp
+  (setq jf-org-source-structure-templates
+        '(("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC")))
+#+END_SRC
+*** All
+Tie it all together.
+#+BEGIN_SRC emacs-lisp
+(setq jf-org-structure-templates
+    (append
+        jf-org-source-structure-templates))
+#+END_SRC
+
+** Org-mode
+Keep org-mode up to date straight from the cow's utters.
+If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]].
+#+BEGIN_SRC emacs-lisp
+  (use-package org
+    :pin org
+    :mode ("\\.org\\'" . org-mode)
+    :hook ((org-mode . org-indent-mode)
+           (org-capture-mode . evil-insert-state))
+
+    :general
+    (jf-major-def
+     :keymaps 'org-mode-map
+     "e" 'org-export-dispatch
+     "a" 'org-attach)
+    (jf-org-def
+     "a" 'org-agenda
+     "c" 'org-capture
+     "l" 'org-store-link
+     "b" 'org-switchb
+     "r" 'jf-org-capture-refile)
+    :custom
+    (org-directory "~/Documents/org")
+    (org-agenda-files '("~/Documents/org/"))
+    (org-default-notes-file "notes.org")
+    (org-agenda-include-diary t)
+    (org-src-window-setup 'current-window "Edit source code in the current window")
+    (org-src-fontify-natively t "Highlight syntax in source blocks")
+    (org-latex-to-pdf-process '("latexmk -f pdf %f") "Use pdflatex for export")
+    (org-capture-templates jf-org-capture-templates)
+    (org-structure-template-alist (append org-structure-template-alist jf-org-structure-templates)))
+#+END_SRC
+** Pretty org-mode bullets
+Make bullets look choice
+#+BEGIN_SRC emacs-lisp
+  (use-package org-bullets
+    :hook (org-mode . org-bullets-mode))
+#+END_SRC
 * Communication
 * Web
 * Tools
+** Fuzzy Matching
+Most facilities are provided by [[https://github.com/abo-abo/swiper][Ivy]] and friends, which build on existing emacs commands.
+*** Smex
+While the actual smex command is not in use, 
+counsel-M-x will use it for sorting by usage.
+#+BEGIN_SRC emacs-lisp
+(use-package smex)
+#+END_SRC
+*** Ivy
+#+BEGIN_SRC emacs-lisp
+  (use-package ivy
+    :init
+    (defun jf-kill-current-buffer ()
+      (interactive)
+      (kill-buffer (current-buffer)))
+    (defun jf-kill-all-buffers ()
+      (interactive)
+      (seq-do 'kill-buffer (buffer-list)))
+
+    :general
+    (jf-buffers-def
+      "b" 'ivy-switch-buffer
+      "v" 'ivy-push-view
+      "V" 'ivy-pop-view
+      "c" 'jf-kill-current-buffer
+      "C" 'jf-kill-all-buffers)
+
+    :custom
+    (ivy-use-virtual-buffers t)
+    (ivy-count-format "%d/%d"))
+#+END_SRC
+*** Counsel
+A collection of ivy enhanced versions of common Emacs commands.
+#+BEGIN_SRC emacs-lisp
+  (use-package counsel
+    :general
+    ("M-x" 'counsel-M-x)
+    (jf-leader-def
+      :states 'normal
+      "x" 'counsel-M-x)
+    (jf-files-def
+      "f" 'counsel-find-file)
+    (jf-help-def
+      "a" 'counsel-apropos
+      "f" 'counsel-describe-function
+      "k" 'counsel-descbinds
+      "l" 'counsel-find-library
+      "s" 'counsel-info-lookup-symbol
+      "u" 'counsel-unicode-char
+      "v" 'counsel-describe-variable))
+#+END_SRC
+*** Swiper
+An ivy-ified replacement for isearch.
+#+BEGIN_SRC emacs-lisp
+  (use-package swiper
+    :after evil
+    :general
+    (:keymaps 'override
+      :states 'normal
+      "/" 'swiper
+      "n" 'evil-search-previous
+      "N" 'evil-search-next))
+#+END_SRC
+
+** Neotree
+A cool toggleable directory structure sidebar.
+It needs icon fonts, installed with =M-x all-the-icons-install-fonts=.
+#+BEGIN_SRC emacs-lisp
+  (use-package all-the-icons)
+  (use-package neotree
+    :after all-the-icons
+    :general
+    (jf-apps-def
+      "t" 'neotree-toggle)
+    :custom
+    (neo-theme (if (display-graphic-p) 'icons 'arrow)))
+#+END_SRC
+** Ranger
+Brings the glory of [[https://github.com/ralesi/ranger.el][Ranger]] to Emacs.
+#+BEGIN_SRC emacs-lisp
+  (use-package ranger
+    :commands (ranger deer))
+#+END_SRC
+** Sunshine
+Allows retrieving OpenWeatherMap forecasts in the minibuffer.
+#+BEGIN_SRC emacs-lisp
+  (use-package sunshine
+    :commands sunshine-forecast
+    :general
+    (jf-apps-def
+     "w" #'sunshine-forecast)
+    :custom
+    (sunshine-location "New York, US")
+    (sunshine-appid "7caf100277f14845e7f354c6590a09cb")
+    (sunshine-show-icons t))
+#+END_SRC
 * Programming
 ** Formatting
 *** Indentation
 Set some *sane* defaults
 #+BEGIN_SRC emacs-lisp
-(setq foltz-tab-width 4)
-(setq-default python-indent-offset foltz-tab-width)
-(setq-default evil-shift-width foltz-tab-width)
-(setq-default c-basic-offset foltz-tab-width)
+(setq jf-tab-width 4)
+(setq-default python-indent-offset jf-tab-width)
+(setq-default evil-shift-width jf-tab-width)
+(setq-default c-basic-offset jf-tab-width)
 ; Disable annoying electric indent of previous lines
 (setq-default electric-indent-inhibit t)
 ; Eat the whole tab when I press backspace
