@@ -238,23 +238,73 @@ Use =S= and a delimiter to surround in visual mode.
 #+END_SRC
 * Emacs
 ** Defaults
-*** Customize
+*** Configuration Editing
+Add functions for editing and reloading the Emacs config files.
+#+BEGIN_SRC emacs-lisp
+  (defun jf-edit-config ()
+    (interactive)
+    (find-file jf-config-file))
+
+  (defun jf-edit-init ()
+    (interactive)
+    (find-file jf-init-file))
+
+  (defun jf-reload-config ()
+    (interactive)
+    (org-babel-load-file jf-config-file))
+
+  (jf-files-def
+    "e"  (jf-create-wk-prefix "emacs files")
+    "ec" #'jf-edit-config
+    "ei" #'jf-edit-init
+    "er" #'jf-reload-config)
+#+END_SRC
+*** Add to Load Path
+Create and add a folder to the load path for local lisp files.
+The folder itself and all descendants will be added to the path.
+These packages will take precedence over other libraries with the same name.
+#+BEGIN_SRC emacs-lisp
+  (unless (file-exists-p jf-load-path)
+    (make-directory jf-load-path))
+
+  (let ((default-directory jf-load-path))
+    (setq load-path
+          (append
+           (let ((load-path (copy-sequence load-path)))
+             (append
+              (copy-sequence (normal-top-level-add-to-load-path '(".")))
+              (normal-top-level-add-subdirs-to-load-path)))
+           load-path)))
+#+END_SRC
+*** File Not Found Functions
+Offer to create parent folders when a file is opened
+Offer to create nonexistant parent directories.
+#+BEGIN_SRC emacs-lisp
+  (defun jf-create-nonexistant-directories ()
+    (let ((parent-directory (file-name-directory buffer-file-name)))
+      (when (and (not (file-exists-p parent-directory))
+                (y-or-n-p (format "Directory `%s' does not exist. Create it?" parent-directory)))
+        (make-directory parent-directory t)))) ; last argument specifies to behave like `mkdir -p'
+
+  (add-to-list 'find-file-not-found-functions #'jf-create-nonexistant-directories)
+#+END_SRC
+*** Customize Location
 Make changes in =M-x customize= go somewhere other than being schlunked into =init.el=.
 #+BEGIN_SRC emacs-lisp
   (setq custom-file (concat user-emacs-directory "_customize.el"))
   (load custom-file t)
 #+END_SRC
-*** Bell
+*** Disable Bell
 Shut up, emacs.
 #+BEGIN_SRC emacs-lisp
   (setq ring-bell-function #'ignore)
 #+END_SRC
-*** Prompts
+*** Shorter Prompts
 Make =yes-or-no= prompts ask for =y-or-n= instead. Saves loads of time™.
 #+BEGIN_SRC emacs-lisp
   (defalias 'yes-or-no-p #'y-or-n-p)
 #+END_SRC
-*** Backup Files
+*** Move Backup Files
 By default, emacs gunks up every folder with =file~= backups 
 and =#file#= lockfiles. Schlunk them all in =/tmp= instead.
 #+BEGIN_SRC emacs-lisp
@@ -263,15 +313,52 @@ and =#file#= lockfiles. Schlunk them all in =/tmp= instead.
   (setq auto-save-file-name-transforms
         `((".*" ,temporary-file-directory t)))
 #+END_SRC
-*** Scrolling
+*** Nicer Scrolling
+Keep the cursor away from the edges when scrolling,
+rather than hitting the bottom and scrolling a metric
+boatload off the screen.
 #+BEGIN_SRC emacs-lisp
-(setq scroll-conservatively 100) ;; don't scroll a metric boatload when bottom is hit
+  (require 'smooth-scrolling)
 #+END_SRC
 
-*** auth-source
+*** Secure auth-source
 GPG encrypt stored auth tokens from [[https://www.gnu.org/software/emacs/manual/html_mono/auth.html][auth-source]] instead of storing them in plaintext.
 #+BEGIN_SRC emacs-lisp
   (setq auth-sources '("~/.emacs.d/authinfo.gpg"))
+#+END_SRC
+*** Use UTF-8
+Pleeeease default to UTF-8, Emacs.
+#+BEGIN_SRC emacs-lisp
+  (setq locale-coding-system 'utf-8)
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+  (set-selection-coding-system 'utf-8)
+  (prefer-coding-system 'utf-8)
+#+END_SRC
+*** Trash when Deleting
+Don't permanently delete stuff unless asked.
+#+BEGIN_SRC emacs-lisp
+  (setq delete-by-moving-to-trash t)
+#+END_SRC
+*** Open Compressed Files
+...automatically.
+#+BEGIN_SRC emacs-lisp
+  (setq auto-compression-mode t)
+#+END_SRC
+*** Save Minibuffer History
+#+BEGIN_SRC emacs-lisp
+  (savehist-mode 1)
+  (setq history-length 1000)
+#+END_SRC
+*** Double Spaces
+Why sentences would need double spaces to end I do not know.
+#+BEGIN_SRC emacs-lisp
+  (set-default 'sentence-end-double-space nil)
+#+END_SRC
+*** Eval Print Level
+Print more stuff when running =C-x C-e= or =(eval-last-sexp)=
+#+BEGIN_SRC emacs-lisp
+  (setq eval-expression-print-level 100)
 #+END_SRC
 ** UI
 *** Font
@@ -294,8 +381,9 @@ Adds support for =:diminish= in use-package declarations, which hides a mode fro
 (use-package diminish)
 #+END_SRC
 **** Column Number
-Show the column number in the modeline.
+Show line and column numbers in the modeline.
 #+BEGIN_SRC emacs-lisp
+(setq line-number-mode t)
 (setq column-number-mode t)
 #+END_SRC
 *** Line Numbers
