@@ -32,6 +32,8 @@ configuration all in once place. It's pretty much the basis of this entire confi
 A few useful =:keyword= macros that extend the vanilla =use-package= functionality.
 **** :company
 #+BEGIN_SRC emacs-lisp
+  (require 'derived)
+
   (defun use-package-company-normalize (name keyword args)
     "Normalize the KEYWORD with NAME :company with arguments ARGS into a list of pairs for the handler."
     (use-package-as-one (symbol-name keyword) args
