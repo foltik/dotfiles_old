@@ -217,6 +217,16 @@ doesn't cover properly by default.
        which-key)))
 #+END_SRC
 ** Evil Extensions
+*** Avy
+An enhanced version of =f= in Vim.
+#+BEGIN_SRC emacs-lisp
+  (use-package avy
+    :general
+    (:keymaps 'override
+      :states 'normal
+      "C-f" 'avy-goto-char-in-line
+      "C-F" 'avy-goto-char))
+#+END_SRC
 *** evil-surround
 Use =S= and a delimiter to surround in visual mode.
 #+BEGIN_SRC emacs-lisp
