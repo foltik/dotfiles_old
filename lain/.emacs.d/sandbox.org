@@ -98,44 +98,49 @@ keybindings following incomplete commands.
 #+END_SRC
 ** General
 [[https://github.com/noctuid/general.el][General]] is an excellent keybind manager that adds *tons* of useful macros.
+Also set up a leader key and prefixes, like =\= in Vim.
 #+BEGIN_SRC emacs-lisp
-  (use-package general)
-#+END_SRC
-** Leaders
-Create a leader key, =SPC=, like =\= in vim.
-Different button presses after the leader bring you to different options.
-#+BEGIN_SRC emacs-lisp
-  (general-create-definer jf-leader-def
-    :keymaps 'override
-    :states '(normal insert emacs)
-    :prefix "SPC"
-    :non-normal-prefix "M-SPC")
+  (use-package general
+    :config
+    (general-create-definer jf-leader-def
+      :keymaps 'override
+      :states '(normal insert emacs)
+      :prefix "SPC"
+      :non-normal-prefix "M-SPC")
 
-  (defmacro jf-create-definers (definitions)
-    "A wrapper for general-create-definer.
-  For every pair in DEFINITIONS, creates a leader
-  with name jf-NAME-def and keybind SPC KEY or M-SPC KEY in normal mode."
-    `(progn
-       ,@(mapcan
-          (lambda (def)
-            (let ((key  (car def))
-                  (name (cdr def)))
-              `((general-create-definer ,(intern (concat "jf-" name "-def"))
-                  :keymaps 'override
-                  :states '(normal insert emacs)
-                  :prefix ,(concat "SPC " key)
-                  :non-normal-prefix ,(concat "M-SPC " key))
-                (jf-leader-def ,key '(:ignore t :wk ,name)))))
-          definitions)))
+    (defun jf-create-wk-prefix (desc)
+      "Helper for creating which-key prefix descriptions.
+  Bind to a key with general to make which-key show DESC
+  as the prefix's description"
+      `(:ignore t :wk ,desc))
 
-  (jf-create-definers
-   (("b" . "buffers")
-    ("f" . "files")
-    ("g" . "git")
-    ("h" . "help")
-    ("o" . "org")
-    ("p" . "projects")
-    ("w" . "windows")))
+    (defmacro jf-create-definers (definitions)
+      "A wrapper for general-create-definer.
+    For every pair in DEFINITIONS, creates a leader
+    with name jf-NAME-def and keybind SPC KEY or M-SPC KEY in normal mode."
+      `(progn
+         ,@(mapcan
+            (lambda (def)
+              (let ((key  (car def))
+                    (name (cdr def)))
+                `((general-create-definer ,(intern (concat "jf-" name "-def"))
+                    :keymaps 'override
+                    :states '(normal insert emacs)
+                    :prefix ,(concat "SPC " key)
+                    :non-normal-prefix ,(concat "M-SPC " key))
+                  (jf-leader-def ,key ',(jf-create-wk-prefix name)))))
+            definitions)))
+
+    (jf-create-definers
+     (("a" . "apps")
+      ("b" . "buffers")
+      ("f" . "files")
+      ("g" . "git")
+      ("h" . "help")
+      ("m" . "major")
+      ("o" . "org")
+      ("p" . "projects")
+      ("w" . "windows"))))
 #+END_SRC
 * Vim Emulation
 ** Evil
