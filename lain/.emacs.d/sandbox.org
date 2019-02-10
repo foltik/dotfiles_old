@@ -728,250 +728,267 @@ Define some *useful* helper functions
 
 (add-hook 'prog-mode-hook #'whitespace-mode)
 #+END_SRC
-*** Smart Parentheses
-smartparens handles parens for languages that aren't lispy,
-and paredit handles the rest.
-Keybinds in =M-x sp-cheat-sheet=.
+*** Parentheses
+**** Smartparens
+[[https://github.com/Fuco1/smartparens][Smartparens]] handles parens for languages that aren't lispy.
 #+BEGIN_SRC emacs-lisp
-(use-package paredit
+  (use-package smartparens
     :diminish
-    :commands enable-paredit-mode)
-     
-(use-package smartparens
-    :diminish
-    :commands smartparens-strict-mode
+    :commands smartparens-mode
     :config
     (require 'smartparens-config))
-
-(use-package evil-smartparens
-    :hook (smartparens-enabled . evil-smartparens-mode))
 #+END_SRC
-*** Smart Parentheses Modes
-Picks a suitable parenthesis editing mode for the 
-current major mode when entering any prog-mode.
+**** ParEdit
+And [[https://www.emacswiki.org/emacs/ParEdit][ParEdit]] handles the rest.
 #+BEGIN_SRC emacs-lisp
-(defun foltz-paren-mode ()
-    (if (member major-mode 
-          '(emacs-lisp-mode
-            lisp-mode
-            lisp-interaction-mode
-            scheme-mode))
-        (enable-paredit-mode)
-        (smartparens-strict-mode)))
-
-(add-hook 'prog-mode-hook #'foltz-paren-mode)
+  (use-package paredit
+    :diminish
+    :commands enable-paredit-mode)
 #+END_SRC
-*** ws-butler
+**** Evil-Cleverparens
+[[https://github.com/luxbock/evil-cleverparens][Evil-Cleverparens]] adds additional features to Evil all about
+working with sexps, including keeping parens balanced when
+using commands like =dd=.
+#+BEGIN_SRC emacs-lisp
+  (use-package evil-cleverparens
+    :diminish
+    :commands evil-cleverparens-mode)
+#+END_SRC
+**** Activation
+Pick a suitable parenthesis editing mode for the
+current major mode when entering any prog-mode derivative.
+#+BEGIN_SRC emacs-lisp
+  (defun jf-paren-mode ()
+    (if (member major-mode '(emacs-lisp-mode
+                             lisp-mode
+                             lisp-interaction-mode
+                             scheme-mode))
+        (enable-paredit-mode)
+      (smartparens-mode)))
+
+  (add-hook 'prog-mode-hook #'jf-paren-mode)
+#+END_SRC
+*** Whitespace
+**** ws-butler
 Unobtrusively cleans up whitespace before EOLs 
 as you edit, stopping the noisy commits generated 
 from blanket trimming entire files.
 #+BEGIN_SRC emacs-lisp
-(use-package ws-butler
+  (use-package ws-butler
     :hook (prog-mode . ws-butler-mode))
 #+END_SRC
 *** pretty-mode
-[[https://github.com/pretty-mode/pretty-mode][Redisplay parts of the Emacs buffer as pretty symbols.]]
+[[https://github.com/pretty-mode/pretty-mode][pretty-mode]] redisplays parts of the Emacs buffer as pretty symbols.
 #+BEGIN_SRC emacs-lisp
-(use-package pretty-mode
+  (use-package pretty-mode
     :hook (prog-mode . pretty-mode)
     :config
-    (pretty-deactivate-groups
-        '(:equality :sub-and-superscripts))
-    (pretty-activate-groups
-        '(:greek :arithmetic-nary
-          :ordering :ordering-double :ordering-triple
-          :arrows :arrows-twoheaded :punctuation :logic :sets)))
+    (pretty-deactivate-groups '(:arithmetic
+                                :sub-and-superscripts))
+    (pretty-activate-groups '(:equality
+                              :ordering
+                              :ordering-double
+                              :ordering-triple
+                              :arrows
+                              :arrows-twoheaded
+                              :punctuation
+                              :logic
+                              :sets)))
 #+END_SRC
 
-*** prettify-symbols-mode
-Built into emacs since 24.1
+*** Prettify-Symbols-Mode
+Allows custom unicode replacement of symbols. Fill in the gaps where
+pretty-mode left off.
+**** Python
 #+BEGIN_SRC emacs-lisp
-(add-hook 'python-mode-hook 'prettify-symbols-mode)
-(add-hook 'python-mode-hook (lambda ()
-    (mapc (lambda (pair) (push pair prettify-symbols-alist))
-        '(;; Syntax
-         ("in" .       #x2208)
-         ("not in" .   #x2209)
-         ("return" .   #x27fc)
-         ("yield" .    #x27fb)
-         ("for" .      #x2200)
-         ;; Base Types
-         ("int" .      #x2124)
-         ("float" .    #x211d)
-         ("str" .      #x1d54a)
-         ("True" .     #x1d54b)
-         ("False" .    #x1d53d)))))
-#+END_SRC
+  (defun jf-prettify-python ()
+    (dolist (pair '(;; Syntax
+           ("in" .       #x2208)
+           ("not in" .   #x2209)
+           ("return" .   #x27fc)
+           ("yield" .    #x27fb)
+           ("for" .      #x2200)
+           ;; Base Types
+           ("int" .      #x2124)
+           ("float" .    #x211d)
+           ("str" .      #x1d54a)
+           ("True" .     #x1d54b)
+           ("False" .    #x1d53d)))
+      (push pair prettify-symbols-alist)))
 
-*** Column 80 Highlight
-Add a hotkey for highlighting column 80
-and activate it in =prog-mode=
-#+BEGIN_SRC emacs-lisp
-(use-package fill-column-indicator
-    :init
-    (setq fci-rule-use-dashes t)
-    (setq fci-rule-column 80)
-    :general)
+  (add-hook 'python-mode-hook #'prettify-symbols-mode)
+  (add-hook 'python-mode-hook #'jf-prettify-python)
 #+END_SRC
 
 ** Checkers
 *** Flycheck
-Flycheck does syntax highlighting in a few languages
+Flycheck highlights syntax errors in a few languages.
 #+BEGIN_SRC emacs-lisp
-(use-package flycheck
+  (use-package flycheck
     :hook (prog-mode . flycheck-mode))
 #+END_SRC
+*** Column 80 Highlight
+Add a hotkey for highlighting column 80
+and activate it in =prog-mode=
+#+BEGIN_SRC emacs-lisp
+  (use-package fill-column-indicator
+    :init
+    (setq fci-rule-use-dashes t)
+    (setq fci-rule-column 80)
+    :general
+    (jf-major-def
+      :keymaps 'prog-mode-map
+      "8" 'fci-mode))
+#+END_SRC
+
 ** Completion
 *** Company
-company auto-completes stuff in the buffer,
-company-quickhelp shows documentation popups
-when idling on a completion candidate.
+Company auto-completes stuff in the buffer, and company-quickhelp shows 
+documentation popups when idling on a completion candidate.
 #+BEGIN_SRC emacs-lisp
-(use-package company
-    :defer t
-    :hook ((prog-mode cdlatex-mode) . company-mode)
+  (use-package company
+    :hook (prog-mode . company-mode)
     :general
     (:keymaps 'company-active-map
-     "C-SPC" 'company-abort)
+              "C-SPC" 'company-abort)
+
     :custom
     (company-maximum-prefix-length 2)
     (company-idle-delay 0.2 "Decrease idle delay"))
 
-(use-package company-quickhelp
-  :after company
-  :hook (company-mode . company-quickhelp-mode))
+  (use-package company-quickhelp
+    :after company
+    :hook (company-mode . company-quickhelp-mode))
 #+END_SRC
 ** Snippets
 Yasnippet adds support for custom snippets
 #+BEGIN_SRC emacs-lisp
-(use-package yasnippet
-    :commands yas-minor-mode
+  (use-package yasnippet
     :hook (prog-mode . yas-minor-mode)
     :custom
     (yas-snippet-dirs
-      '("~/.emacs.d/snippets"
-        "~/.emacs.d/elpa/yasnippet-snippets-0.6/snippets")))
-;;;(use-package yasnippet-snippets)
+     '("~/.emacs.d/snippets"
+       "~/.emacs.d/elpa/yasnippet-snippets-0.6/snippets")))
 #+END_SRC
 
 ** Debugging
 *** Realgud
-[[https://github.com/realgud/realgud][Realgud]] is a modular frontend for many debuggers
+[[https://github.com/realgud/realgud][Realgud]] is a modular frontend for many debuggers, right in Emacs.
 #+BEGIN_SRC emacs-lisp
-(use-package realgud
-    :commands 
-    (realgud:gdb 
-     realgud:lldb 
-     realgud:node-inspect 
-     realgud:pdb 
+  (use-package realgud
+    :commands
+    (realgud:gdb
+     realgud:lldb
+     realgud:node-inspect
+     realgud:pdb
      realgud:trepan3k))
 #+END_SRC
-*** RMSBolt
+*** RMSbolt
+[[https://github.com/emacsmirror/rmsbolt][RMSbolt]] Shows disassembly in a buffer next to code, highlighting relevant regions.
 #+BEGIN_SRC emacs-lisp
-(use-package rmsbolt
+  (use-package rmsbolt
     :commands rmsbolt-mode)
 #+END_SRC
 ** Git
-*** magit
+*** Magit
 It's magic git!
 Keybinds [[https://github.com/emacs-evil/evil-magit][here]]
 #+BEGIN_SRC emacs-lisp
   (use-package magit
-      :general)
+    :general
+    (jf-git-def
+      "b" 'magit-blame-addition
+      "B" 'magit-blame-reverse
+      "s" 'magit-status))
 #+END_SRC
 It's *evil* magic git!
 #+BEGIN_SRC emacs-lisp
 (use-package evil-magit
   :after (evil magit))
 #+END_SRC
-*** forge
+*** Forge
 Magic GitHub facilities for git forges such as GitHub and GitLab!
 #+BEGIN_SRC emacs-lisp
   (use-package forge
     :after magit
-    :init
-    (setq foltz-forge-hosts
-      '(("git.lcsr.rutgers.edu" "git.lcsr.rutgers.edu/api/v4" "git.lcsr.rutgers.edu" forge-gitlab-repository)))
+    :preface
+    (defvar jf-lcsr-git-host
+          '("git.lcsr.rutgers.edu" "git.lcsr.rutgers.edu/api/v4" "git.lcsr.rutgers.edu" forge-gitlab-repository))
     :config
-    (setq forge-alist (append forge-alist foltz-forge-hosts)))
+    (setq forge-alist (append forge-alist (list jf-lcsr-git-host))))
+#+END_SRC
+*** Smeargle
+Highlights regions in files by last update time.
+Older regions are more whitey and newer regions are more blacky.
+#+BEGIN_SRC emacs-lisp
+  (use-package smeargle
+    :general
+    (jf-git-def
+      "H t" 'smeargle
+      "H h" 'smeargle-commits
+      "H c" 'smeargle-clear))
 #+END_SRC
 ** Projects
 Projectile provides project-level features like
 make shortcuts and file switching
 #+BEGIN_SRC emacs-lisp
-(use-package projectile
-    :init
-    (defun foltz-projectile-neotree () "Open NeoTree in the project root"
-        (interactive)
-        (let
-            ((project-dir (projectile-project-root))
-             (file-name   (buffer-file-name)))
-        (neotree-toggle)
-        (if project-dir
-            (if (neo-global--window-exists-p)
-                (progn
-                    (neotree-dir project-dir)
-                    (neotree-find file-name))))))
+  (use-package projectile
+    :defer t
+    :preface
+    (defvar jf-projects-path "~/Documents/dev")
 
-    (defun foltz-projectile-discover-projects (directory) "Add projects in dir to projectile cache"
-        (interactive
-            (list (read-directory-name "Starting directory: ")))
-        (let ((subdirs (directory-files directory t)))
-            (mapcar (lambda (dir)
-                (when 
-                    (and 
-                        (file-directory-p dir)
-                        (not (member (file-name-nondirectory dir) '(".." "."))))
-                    (let ((default-directory dir) (projectile-cached-project-root dir))
-                        (when (projectile-project-p)
-                            (projectile-add-known-project (projectile-project-root))))))
-                subdirs)))
+    :general
+    (jf-leader-def
+     "p" '(:keymap projectile-command-map))
 
     :config
     (projectile-mode 1)
-    (foltz-projectile-discover-projects "~/Documents/dev")
-    :general
-    (:keymaps 'projectile-command-map
-     "t" 'foltz-projectile-neotree)
+    ;; Discover projects in jf-projects-path
+    (let ((subdirs (directory-files jf-projects-path t)))
+      (dolist (dir subdirs)
+        (unless (member (file-name-nondirectory dir) '(".." "."))
+          (when (file-directory-p dir)
+            (let ((default-directory dir)
+                  (projectile-cached-project-root dir))
+              (when (projectile-project-p)
+                (projectile-add-known-project (projectile-project-root))))))))
+
     :custom
     (projectile-completion-system 'ivy)
-    (projectile-project-search-path '("~/Documents/dev")))
+    (projectile-project-search-path (list jf-projects-path)))
 #+END_SRC
-** Tools
 ** Languages
 *** Fish
-Beter editing of scripts for the fish shell
+Mode for editing of scripts for the fish shell.
 #+BEGIN_SRC emacs-lisp
-(use-package fish-mode
+  (use-package fish-mode
     :mode "\\.fish\\'")
 #+END_SRC
 *** Markdown
+Mode for editing markdown.
 #+BEGIN_SRC emacs-lisp
-(use-package markdown-mode
+  (use-package markdown-mode
     :mode "\\.md\\'")
 #+END_SRC
 
 *** Python
-Jedi for autocompletion sources
+Jedi for autocompletion sources in python-mode.
 #+BEGIN_SRC emacs-lisp
-(use-package company-jedi
+  (use-package company-jedi
     :company python-mode)
 #+END_SRC
-
 *** Javascript
-[[https://github.com/mooz/js2-mode][js2-mode]] improves the default js mode. Keybindings in [[https://github.com/emacs-evil/evil-collection/blob/master/evil-collection-js2-mode.el][this file]].
+[[https://github.com/mooz/js2-mode][js2-mode]] improves the default js mode.
 #+BEGIN_SRC emacs-lisp
-(use-package js2-mode
+  (use-package js2-mode
     :mode "\\.js\\'"
     :interpreter "node")
 #+END_SRC
-
-*** Web-dev
+*** Web
 Web-mode should give everything you need for a web-dev major mode.
-Company integration is done with company-web
-
+Company integration is done with company-web.
 #+BEGIN_SRC emacs-lisp
-(use-package web-mode
+  (use-package web-mode
     :mode ("\\.html\\'"
            "\\.php\\'"
            "\\.blade\\.")
