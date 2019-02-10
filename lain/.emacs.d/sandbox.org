@@ -996,116 +996,120 @@ Company integration is done with company-web.
     (web-mode-code-indent-offset 4)
     (web-mode-indent-style 4))
 
-(use-package company-web
+  (use-package company-web
     :company web-mode)
 #+END_SRC
 
 *** JSON
-Just an enhanced json mode
+Mode for editing JSON files.
 #+BEGIN_SRC emacs-lisp
-(use-package json-mode
+  (use-package json-mode
     :mode "\\.json\\'")
 #+END_SRC
-
 *** YAML
-Enhanced yaml mode
+Mode for editing YAML files.
 #+BEGIN_SRC emacs-lisp
-(use-package yaml-mode
+  (use-package yaml-mode
     :mode "\\.yaml\\'")
 #+END_SRC
 
 *** Arch PKGBUILD
-For editing PKGBUILD files
+Mode for editing PKGBUILD files.
 #+BEGIN_SRC emacs-lisp
-(use-package pkgbuild-mode
+  (use-package pkgbuild-mode
     :mode ".*PKGBUILD\\'")
 #+END_SRC
 
 *** LaTeX
 **** AUCTeX
-AUCTeX is a major mode for editing tex,
-CDLaTeX adds some minor niceities to it.
-company-auctex for completion.
+AUCTeX is a major mode for editing TeX.
+Company completions are handled by company-auctex and company-math.
 #+BEGIN_SRC emacs-lisp
-(use-package tex
+  (use-package tex
     :defer t
     :ensure auctex
     :general
+    (jf-major-def
+     :keymaps 'TeX-mode-map
+     "e" 'TeX-command-run-all)
+
     :custom
     (TeX-auto-save t))
 
-(use-package company-auctex
+  (use-package company-auctex
     :company LaTeX-mode)
 
-(use-package company-math
+  (use-package company-math
     :company ((TeX-mode . company-math-symbols-latex)
               (TeX-mode . company-math-symbols-unicode)
               (TeX-mode . company-latex-commands)))
 #+END_SRC
-**** cdlatex
+**** Cdlatex
+cdlatex adds better TeX-specific template expansions and other niceties.
 ***** Environment
 #+BEGIN_SRC emacs-lisp
-(setq foltz-cdlatex-envs nil)
+  (setq jf-cdlatex-envs nil)
 #+END_SRC
 ***** Commands
 #+BEGIN_SRC emacs-lisp
-(setq foltz-cdlatex-commands nil)
+  (setq jf-cdlatex-commands nil)
 #+END_SRC
 ***** Math Symbols
 #+BEGIN_SRC emacs-lisp
-(setq foltz-cdlatex-symbols
-  '((?I ("\\infty"))))
+  (setq jf-cdlatex-symbols
+        '((?I ("\\infty"))))
 #+END_SRC
-***** cdlatex
-cdlatex adds better TeX-specific template expansions and other niceties.
+***** Setup
 #+BEGIN_SRC emacs-lisp
-(use-package cdlatex
+  (use-package cdlatex
     :hook (LaTeX-mode . cdlatex-mode)
     :custom
-    (cdlatex-env-alist foltz-cdlatex-envs)
-    (cdlatex-command-alist foltz-cdlatex-commands)
-    (cdlatex-math-symbol-alist foltz-cdlatex-symbols))
+    (cdlatex-env-alist jf-cdlatex-envs)
+    (cdlatex-command-alist jf-cdlatex-commands)
+    (cdlatex-math-symbol-alist jf-cdlatex-symbols))
 #+END_SRC
 *** Rust
 #+BEGIN_SRC emacs-lisp
-(use-package rust-mode
+  (use-package rust-mode
     :mode "\\.rs\\'"
     :general)
 
-(use-package flycheck-rust
+  (use-package flycheck-rust
+    :after flycheck
     :hook (rust-mode . flycheck-rust-setup))
 
-(use-package racer
+  (use-package racer
     :hook ((rust-mode . racer-mode)
            (rust-mode . eldoc-mode))
     :custom
     (racer-cmd "~/.cargo/bin/racer")
     (racer-rust-src-path "~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src"))
 
-(use-package cargo
+  (use-package cargo
     :hook (rust-mode . cargo-minor-mode)
-    :general)
+    :general
+    (jf-major-def
+     :keymaps 'rust-mode-map
+     "b" #'cargo-process-build
+     "r" #'cargo-process-run
+     "t" #'cargo-process-test))
 #+END_SRC
 *** C/C++
 **** Irony
 Irony handles enhanced C/C++ operations powered by clang
 company-irony for company integration
 #+BEGIN_SRC emacs-lisp
-(use-package irony
-    :after counsel
-    :hook ((c++-mode   . irony-mode)
-           (c-mode     . irony-mode)
-           (irony-mode . irony-cdb-autosetup-compile-options)))
+  (use-package irony
+    :hook ((c-mode c++-mode) . irony-mode)
+           (irony-mode . irony-cdb-autosetup-compile-options))
 
-(use-package company-irony
-    :company irony-mode)
-
-(use-package company-irony-c-headers
-    :company irony-mode)
-
-(use-package flycheck-irony
+  (use-package flycheck-irony
+    :after flycheck
     :hook (irony-mode . flycheck-irony-setup))
-#+END_SRC
-**** Hotkeys
-#+BEGIN_SRC emacs-lisp
+
+  (use-package company-irony
+    :company irony-mode)
+
+  (use-package company-irony-c-headers
+    :company irony-mode)
 #+END_SRC
