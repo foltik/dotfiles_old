@@ -699,33 +699,43 @@ Set some *sane* defaults
 #+END_SRC
 Define some *useful* helper functions
 #+BEGIN_SRC emacs-lisp
-(defun foltz-indent-tabs ()
-  (interactive)
-  (setq tab-width foltz-tab-width)
-  (local-set-key (kbd "") 'tab'to-tab-stop)
-  (setq indent-tabs-mode t))
+  (defun jf-indent-tabs (width)
+    (interactive "nTab width: ")
+    (setq tab-width width)
+    (local-set-key (kbd "TAB") 'tab-to-tab-stop)
+    (setq indent-tabs-mode t))
 
-(defun foltz-indent-spaces (num-spaces)
-  (interactive)
-  (setq tab-width num-spaces)
-  (setq indent-tabs-mode nil))
-(defun foltz-indent-2-spaces ()
-  (foltz-indent-spaces 2))
-(defun foltz-indent-4-spaces ()
-  (foltz-indent-spaces 4))
-(defun foltz-indent-8-spaces ()
-  (foltz-indent-spaces 8))
+  (defun jf-indent-spaces (num)
+    (interactive "nNumber of spaces: ")
+    (setq tab-width num)
+    (setq indent-tabs-mode nil))
 
-(foltz-indent-4-spaces)
+  ;; Default
+  (jf-indent-spaces 4)
 
-(setq whitespace-style '(face tabs tab-mark trailing))
-(custom-set-faces
-   '(whitespace-tab ((t (:foreground "#636363")))))
+  ;; Define functions for every level of indent that might need hooking
+  (cl-macrolet
+      ((jf-define-indent-funs (widths)
+         `(progn
+            ,@(mapcan
+               (lambda (num)
+                 `((defun ,(intern (concat "jf-indent-" (number-to-string num) "-spaces")) ()
+                     (jf-indent-spaces ,num))
+                   (defun ,(intern (concat "jf-indent-tabs-" (number-to-string num))) ()
+                     (jf-indent-tabs ,num))))
+               widths))))
+    (jf-define-indent-funs (2 4 8)))
 
-(setq whitespace-display-mappings
-   '((tab-mark 9 [124 9] [92 9])))
+  ;; TODO: Replace with dedicated whitespace config
+  (setq whitespace-style '(face tabs tab-mark trailing))
+  (custom-set-faces
+     '(whitespace-tab ((t (:foreground "#636363")))))
 
-(add-hook 'prog-mode-hook #'whitespace-mode)
+  ;; Make tabs visible
+  (setq whitespace-display-mappings
+     '((tab-mark 9 [124 9] [92 9])))
+
+  (add-hook 'prog-mode-hook #'whitespace-mode)
 #+END_SRC
 *** Parentheses
 **** Smartparens
