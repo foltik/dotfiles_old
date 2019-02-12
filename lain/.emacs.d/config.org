@@ -1151,3 +1151,11 @@ company-irony for company integration
   (use-package company-irony-c-headers
     :company irony-mode)
 #+END_SRC
+*** Lua
+#+BEGIN_SRC emacs-lisp
+  (use-package lua-mode
+    :mode "\\.lua\\'")
+
+  (use-package company-lua
+    :company lua-mode)
+#+END_SRC
