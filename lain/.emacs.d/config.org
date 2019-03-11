@@ -739,8 +739,8 @@ Define some *useful* helper functions
     (setq tab-width num)
     (setq indent-tabs-mode nil))
 
-  ;; Default
-  (jf-indent-spaces 4)
+  ;; Default to 4 spaces
+  (add-hook 'prog-mode-hook #'jf-indent-4-spaces)
 
   ;; Define functions for every level of indent that might need hooking
   (cl-macrolet
