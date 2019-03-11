@@ -948,12 +948,7 @@ It's *evil* magic git!
 Magic GitHub facilities for git forges such as GitHub and GitLab!
 #+BEGIN_SRC emacs-lisp
   (use-package forge
-    :after magit
-    :preface
-    (defvar jf-lcsr-git-host
-          '("git.lcsr.rutgers.edu" "git.lcsr.rutgers.edu/api/v4" "git.lcsr.rutgers.edu" forge-gitlab-repository))
-    :config
-    (setq forge-alist (append forge-alist (list jf-lcsr-git-host))))
+    :after magit)
 #+END_SRC
 *** Smeargle
 Highlights regions in files by last update time.
