@@ -25,3 +25,7 @@ end
 function ssh
     env TERM=xterm-256color ssh $argv
 end
+
+function emacs
+    emacsclient -nc $argv
+end
