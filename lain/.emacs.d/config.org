@@ -1175,4 +1175,24 @@ company-irony for company integration
   (use-package elixir-mode
       :mode "\\.exs?\\'"
       :hook (elixir-mode . lsp))
+*** Java
+**** Eclim
+Secretly actually use eclipse in the background in the form of eclimd
+for all of the IDE like features.
+#+BEGIN_SRC emacs-lisp
+  (use-package eclim
+    :hook ((java-mode . eclim-mode)
+           (java-mode . jf-indent-4-spaces))
+    :custom
+    (eclimd-default-workspace "~/Documents/dev/workspace")
+    (eclimd-autostart-with-default-workspace t)
+    (eclimd-autostart t))
+
+  (use-package company-emacs-eclim
+    :company java-mode)
 #+END_SRC
+**** Gradle
+The std:: java build system 
+#+BEGIN_SRC emacs-lisp
+  (use-package gradle-mode
+    :commands gradle-mode)
