@@ -253,6 +253,13 @@ Use =S= and a delimiter to surround in visual mode.
     :config
     (global-evil-surround-mode 1))
 #+END_SRC
+*** evil-goggles
+Visual highlighting on evil motions
+#+BEGIN_SRC emacs-lisp
+(use-package evil-goggles
+    :config
+    (evil-goggles-mode))
+#+END_SRC
 * Emacs
 ** Defaults
 *** Configuration Editing
