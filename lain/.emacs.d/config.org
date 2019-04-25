@@ -463,10 +463,6 @@ Requires additional setup on the machine itself.
 
   (defun jf-theme-pywal ()
     (load-file jf-theme-pywal-path))
-
-  (when (eq 'jf-theme 'jf-theme-pywal)
-    (require 'filenotify)
-    (file-notify-add-watch jf-theme-pywal-path '(change) #'jf-theme-pywal))
 #+END_SRC
 *** spacemacs
 This theme is pretty fancy and has lots of supported modes.
@@ -488,7 +484,7 @@ active, the second when it's inactive.
     
 *** Helpers
 #+BEGIN_SRC emacs-lisp
-  (defvar jf-theme #'jf-theme-pywal "Theme function to call.")
+  (defvar jf-theme #'jf-theme-spacemacs "Theme function to call.")
 
   (defun jf-apply-theme ()
     "Apply the current theme as set by jf-theme."
