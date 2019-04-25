@@ -194,6 +194,7 @@ doesn't cover properly by default.
      '(calendar
        cmake-mode
        company
+       compile
        custom
        debug
        dired
