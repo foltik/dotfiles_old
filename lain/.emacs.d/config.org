@@ -994,6 +994,19 @@ make shortcuts and file switching
     (projectile-project-search-path (list jf-projects-path)))
 #+END_SRC
 ** Languages
+*** Language Server Protocol
+Mode for integration with lots of language servers, interacting with company,
+flycheck, projectile, and the works.
+#+BEGIN_SRC emacs-lisp
+  (use-package lsp-mode
+    :commands lsp)
+
+  (use-package lsp-ui
+    :commands lsp-ui-mode)
+
+  (use-package company-lsp
+    :commands company-lsp)
+#+END_SRC
 *** Fish
 Mode for editing of scripts for the fish shell.
 #+BEGIN_SRC emacs-lisp
@@ -1156,4 +1169,10 @@ company-irony for company integration
 
   (use-package company-lua
     :company lua-mode)
+#+END_SRC
+*** Elixir
+#+BEGIN_SRC emacs-lisp
+  (use-package elixir-mode
+      :mode "\\.exs?\\'"
+      :hook (elixir-mode . lsp))
 #+END_SRC
