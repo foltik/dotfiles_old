@@ -717,6 +717,38 @@ Allows retrieving OpenWeatherMap forecasts in the minibuffer.
     (sunshine-show-icons t))
 #+END_SRC
 * Programming
+** Macros
+A helper for defining programmatic emacs/evil macros
+#+BEGIN_SRC emacs-lisp
+  (defun jf-replace-regexps-in-string (str regexps)
+    "Replace all pairs of (regex . replacement) defined by REGEXPS in STR."
+    (if (null regexps)
+        str
+      (jf-replace-regexps-in-string
+       (replace-regexp-in-string (caar regexps) (cdar regexps) str t)
+       (cdr regexps))))
+
+  (defun jf-kbd (str)
+    "Convert STR into a keyboard macro string by replacing terminal key sequences with GUI keycodes."
+    (let ((jf-kbd-regex '(("ESC" . "<escape>")
+                          ("DEL" . "<delete>")
+                          ("BS"  . "<backspace>")
+                          ("RET" . "<return>")
+                          ("SPC" . "<SPC>")
+                          ("TAB" . "<tab>"))))
+      (jf-replace-regexps-in-string str jf-kbd-regex)))
+
+  (defun jf-kbd-exec (str)
+    "Execute the key sequence defined by STR. Terminal based keys are expanded to their graphical counterparts."
+    (let ((minibuffer-message-timeout 0))
+      (execute-kbd-macro (read-kbd-macro (jf-kbd str)))))
+
+  (defmacro jf-kbd-defmacro (name &rest forms)
+    "Create an interactive function NAME with body FORMS, where the evaluation of each form is executed as a keyboard macro."
+    `(defun ,name ()
+       (interactive)
+       ,@(mapcan (lambda (form) `((jf-kbd-exec ,form))) forms)))
+#+END_SRC
 ** Formatting
 *** Indentation
 Set some *sane* defaults
@@ -796,17 +828,31 @@ using commands like =dd=.
     :diminish
     :commands evil-cleverparens-mode)
 #+END_SRC
+**** Helpers
+Helpers for wrangling sexps
+#+BEGIN_SRC emacs-lisp
+  (jf-kbd-defmacro jf-wrap-fn-inline
+    "ESC i{ DEL RET TAB ESC jI} SPC ESC k^")
+
+  (jf-kbd-defmacro jf-wrap-fn-line
+    "ESC kA SPC { DEL ESC jjI} SPC ESC k^")
+
+  (jf-kbd-defmacro jf-wrap-fn-sexp
+    "ESC i{ DEL RET TAB ESC )i} ESC i RET ESC k^")
+#+END_SRC
 **** Activation
 Pick a suitable parenthesis editing mode for the
 current major mode when entering any prog-mode derivative.
 #+BEGIN_SRC emacs-lisp
   (defun jf-paren-mode ()
-    (if (member major-mode '(emacs-lisp-mode
-                             lisp-mode
-                             lisp-interaction-mode
-                             scheme-mode))
-        (enable-paredit-mode)
-      (smartparens-mode)))
+    (electric-pair-mode)
+    (lispyville-mode))
+    ;; (if (member major-mode '(emacs-lisp-mode
+    ;;                          lisp-mode
+    ;;                          lisp-interaction-mode
+    ;;                          scheme-mode))
+    ;;     (enable-paredit-mode)
+    ;;   (smartparens-mode)))
 
   (add-hook 'prog-mode-hook #'jf-paren-mode)
 #+END_SRC
