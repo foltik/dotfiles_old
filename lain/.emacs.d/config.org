@@ -144,6 +144,38 @@ Also set up a leader key and prefixes, like =\= in Vim.
       ("p" . "projects")
       ("w" . "windows"))))
 #+END_SRC
+** Macros
+A helper for defining procedural keyboard macros
+#+BEGIN_SRC emacs-lisp
+  (defun jf-replace-regexps-in-string (str regexps)
+    "Replace all pairs of (regex . replacement) defined by REGEXPS in STR."
+    (if (null regexps)
+        str
+      (jf-replace-regexps-in-string
+       (replace-regexp-in-string (caar regexps) (cdar regexps) str t)
+       (cdr regexps))))
+
+  (defun jf-kbd (str)
+    "Convert STR into a keyboard macro string by replacing terminal key sequences with GUI keycodes."
+    (let ((jf-kbd-regex '(("ESC" . "<escape>")
+                          ("DEL" . "<delete>")
+                          ("BS"  . "<backspace>")
+                          ("RET" . "<return>")
+                          ("SPC" . "<SPC>")
+                          ("TAB" . "<tab>"))))
+      (jf-replace-regexps-in-string str jf-kbd-regex)))
+
+  (defun jf-kbd-exec (str)
+    "Execute the key sequence defined by STR. Terminal based keys are expanded to their graphical counterparts."
+    (let ((minibuffer-message-timeout 0))
+      (execute-kbd-macro (read-kbd-macro (jf-kbd str)))))
+
+  (defmacro jf-kbd-defmacro (name &rest forms)
+    "Create an interactive function NAME with body FORMS, where the evaluation of each form is executed as a keyboard macro."
+    `(defun ,name ()
+       (interactive)
+       ,@(mapcan (lambda (form) `((jf-kbd-exec ,form))) forms)))
+#+END_SRC
 * Vim Emulation
 ** Evil
 [[https://github.com/emacs-evil/evil][Evil]] is pretty much the entirety of Vim in Emacs.
