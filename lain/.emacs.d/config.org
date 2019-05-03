@@ -1211,9 +1211,9 @@ cdlatex adds better TeX-specific template expansions and other niceties.
     :general
     (jf-major-def
      :keymaps 'rust-mode-map
-     "b" #'cargo-process-build
-     "r" #'cargo-process-run
-     "t" #'cargo-process-test))
+     "b b" #'cargo-process-build
+     "b r" #'cargo-process-run
+     "b t" #'cargo-process-test))
 #+END_SRC
 *** C/C++
 **** Irony
@@ -1268,5 +1268,13 @@ for all of the IDE like features.
 The std:: java build system
 #+BEGIN_SRC emacs-lisp
   (use-package gradle-mode
-    :commands gradle-mode)
+    :commands gradle-mode
+    :preface
+    (defun jf-gradle-run-main ()
+      (gradle-execute "run"))
+    :general
+    (jf-major-def
+      :keymaps 'gradle-mode-map
+      "b b" #'gradle-build
+      "b r" #'jf-gradle-run-main))
 #+END_SRC
