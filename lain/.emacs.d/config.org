@@ -938,7 +938,8 @@ pretty-mode left off.
 Flycheck highlights syntax errors in a few languages.
 #+BEGIN_SRC emacs-lisp
   (use-package flycheck
-    :hook (prog-mode . flycheck-mode))
+    :hook (prog-mode . flycheck-mode)
+    :custom (flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
 #+END_SRC
 *** Column 80 Highlight
 Add a hotkey for highlighting column 80
