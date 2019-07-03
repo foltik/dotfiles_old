@@ -106,7 +106,7 @@ Also set up a leader key and prefixes, like =\= in Vim.
     :config
     (general-create-definer jf-leader-def
       :keymaps 'override
-      :states '(normal insert emacs)
+      :states '(normal motion insert emacs)
       :prefix "SPC"
       :non-normal-prefix "M-SPC")
 
@@ -477,10 +477,7 @@ Show a cool custom dashboard buffer on startup.
 
     :custom
     (dashboard-startup-banner 'logo)
-    (dashboard-banner-logo-title
-     (format "Welcome to Electronic Macs. Ready in %.2f seconds with %d GCs."
-             (float-time (time-subtract after-init-time before-init-time))
-             gcs-done))
+    (dashboard-banner-logo-title "Welcome to Electronic Macs.")
     (dashboard-items
      '((recents . 5)
        (agenda)
@@ -528,41 +525,38 @@ active, the second when it's inactive.
 * Organization
 ** Capture Templates
 All capture templates, from tasks to bookmarks.
-*** Refile Targets
-Goodize the refiling targets to allow refiling to arbitrary subtrees.
-#+BEGIN_SRC emacs-lisp
-  (defun jf-org-capture-refile ()
-    (interactive)
-    (setq-local org-refile-targets '((nil :maxlevel . 5)))
-    (setq-local org-refile-use-outline-path t)
-    (org-refile))
-#+END_SRC
 *** Tasks
 #+BEGIN_SRC emacs-lisp
   (setq jf-org-capture-task-templates
         '(("t" "Todo")
           ("tg" "General" entry
-           (file+headline "notes.org" "Todo")
-           "** TODO %^{todo}\nNotes: %?\n")
+           (file "refile.org")
+           "**** TODO %^{task}\n%U\n%a\n%?\n")
           ("tt" "General (Date)" entry
-           (file+olp+datetree "notes.org")
-           "*** TODO %^{todo}\nDue: %^t\nNotes: %?\n")
+           (file "refile.org")
+           "**** TODO %^{task}\n%U\n%a\nDue: %^t\n%?\n")
           ("tT" "General (Date+Time)" entry
-           (file+olp+datetree "notes.org")
-           "*** TODO %^{todo}\nDue: %^T\nNotes: %?\n")
-          ("ts" "School (Date)" entry
-           (file+olp+datetree "notes.org")
-           "*** TODO %^{todo}\nDue: %^t\nClass: %^{class}\nNotes: %?\n")
-          ("tS" "School (Date+Time)" entry
-           (file+olp+datetree "notes.org")
-           "*** TODO %^{todo}\nDue: %^T\nClass: %^{class}\nNotes: %?\n")))
+           (file "refile.org")
+           "**** TODO %^{task}\n%U\n%a\nDue: %^T\n%?\n")
+          ("tst" "School" entry
+           (file "refile.org")
+           "**** TODO %^{task}\n%U\n%a\nDue: %^t\nClass: %^{class}\n%?\n")
+          ("tss" "School (Date)" entry
+           (file "refile.org")
+           "**** TODO %^{todo}\n%U\n%a\nDue: %^t\nClass: %^{class}\n%?\n")
+          ("tsS" "School (Date+Time)" entry
+           (file "refile.org")
+           "**** TODO %^{todo}\n%U\n%a\nDue: %^T\nClass: %^{class}\n%?\n")
+          ("n" "Note" entry
+           (file "refile.org")
+           "** %? :NOTE:\n%U\n%a\n")))
 #+END_SRC
 *** Bookmarks
 #+BEGIN_SRC emacs-lisp
   (setq jf-org-capture-bookmark-templates
         '(("b" "Bookmark" entry
-           (file+headline "links.org" "Unsorted Links")
-           "** [[%^{link}][%^{name}]]\nCreated: %U\nAbout: %^{description}%?\n")))
+           (file "refile.org")
+           "** [[%^{link}][%^{name}]] :LINK:\n%U\n%?")))
 #+END_SRC
 *** Personal
 #+BEGIN_SRC emacs-lisp
@@ -572,18 +566,18 @@ Goodize the refiling targets to allow refiling to arbitrary subtrees.
            (file+olp+datetree "journal.org")
            "**** Today's Events\n%?")
           ("jt" "Thoughts" entry
-           (file+headline "notes.org" "Thoughts")
-           "** %^{summary}\n%U\n%?")
+           (file+olp+datetree "journal.org")
+           "**** Thought\n%^g%^{summary}\n%U\n%?")
           ("jd" "Dream Journal Entry" entry
-           (file+olp+datetree "dreams.org")
-           "**** Dream\n%?")))
+           (file+olp+datetree "journal.org")
+           "**** Today's Dreams %^g\n%?")))
 #+END_SRC
 *** Protocol
 #+BEGIN_SRC emacs-lisp
   (setq jf-org-capture-protocol-templates
         '(("w" "Website" entry
-           (file+headline "sites.org" "Unsorted Sites")
-           "** [[%:link][%:description%?]]\nCreated: %U\nAbout: %^{description}%?\n%:initial")))
+           (file "refile.org")
+           "** [[%:link][%:description%?]] :LINK:\n%U\n%a\n%i\n%?")))
 #+END_SRC
 *** All
 Tie it all together.
@@ -594,6 +588,15 @@ Tie it all together.
          jf-org-capture-personal-templates
          jf-org-capture-bookmark-templates
          jf-org-capture-protocol-templates))
+#+END_SRC
+*** Hooks
+Temporarily widens the capture mode buffer and loads the tag completion alist with
+the full buffer tags.
+#+BEGIN_SRC emacs-lisp
+  (defun jf-update-capture-tags ()
+    (save-restriction
+      (widen)
+      (setq-local org-tag-alist (org-get-buffer-tags))))
 #+END_SRC
 ** Structure Templates
 Defines expansions with =<= followed by a string in org-mode.
@@ -609,7 +612,58 @@ Tie it all together.
     (append
         jf-org-source-structure-templates))
 #+END_SRC
+** Structure Editing
+*** Refile/Copy Targets
+Goodize the refiling targets to allow refiling and copying to arbitrary subtrees.
+#+BEGIN_SRC emacs-lisp
+  (defun jf-org-deep-refile ()
+    (interactive)
+    (setq-local org-refile-targets '((nil :maxlevel . 5)
+                                     (org-agenda-files :maxlevel . 3)))
+    (setq-local org-refile-use-outline-path t)
+    (org-refile))
+  (defun jf-org-deep-copy ()
+    (interactive)
+    (setq-local org-refile-targets '((nil :maxlevel . 5)
+                                     (org-agenda-files :maxlevel . 3)))
+    (setq-local org-refile-use-outline-path t)
+    (org-copy))
+#+END_SRC
+** TODOs
+*** States
+#+BEGIN_SRC emacs-lisp
+  (setq jf-org-todo-keywords
+        '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
+          (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "MEETING")))
 
+  (setq jf-org-todo-faces
+        '(("TODO" :foreground "red" :weight bold)
+          ("NEXT" :foreground "blue" :weight bold)
+          ("DONE" :foreground "forest green" :weight bold)
+          ("WAITING" :foreground "orange" :weight bold)
+          ("HOLD" :foreground "magenta" :weight bold)
+          ("CANCELLED" :foreground "forest green" :weight bold)
+          ("MEETING" :foreground "forest green" :weight bold)
+          ("PHONE" :foreground "forest green" :weight bold)))
+#+END_SRC
+*** Tags and Triggers
+- Moving a task to CANCELLED adds a CANCELLED tag
+- Moving a task to WAITING adds a WAITING tag
+- Moving a task to HOLD adds WAITING and HOLD tags
+- Moving a task to a done state removes WAITING and HOLD tags
+- Moving a task to TODO removes WAITING, CANCELLED, and HOLD tags
+- Moving a task to NEXT removes WAITING, CANCELLED, and HOLD tags
+- Moving a task to DONE removes WAITING, CANCELLED, and HOLD tags
+#+BEGIN_SRC emacs-lisp
+  (setq jf-org-todo-state-tags-triggers
+        '((("CANCELLED" ("CANCELLED" . t))
+           ("WAITING" ("WAITING" . t))
+           ("HOLD" ("WAITING") ("HOLD" . t))
+           (done ("WAITING") ("HOLD"))
+           ("TODO" ("WAITING") ("CANCELLED") ("HOLD"))
+           ("NEXT" ("WAITING") ("CANCELLED") ("HOLD"))
+           ("DONE" ("WAITING") ("CANCELLED") ("HOLD")))))
+#+END_SRC
 ** Org-mode
 Keep org-mode up to date straight from the cow's utters.
 If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]].
@@ -618,7 +672,11 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
     :pin org
     :mode ("\\.org\\'" . org-mode)
     :hook ((org-mode . org-indent-mode)
-           (org-capture-mode . evil-insert-state))
+           (org-capture-mode . evil-insert-state)
+           (org-capture-mode . jf-update-capture-tags))
+
+    :config
+    (org-clock-persistence-insinuate)
 
     :general
     (jf-major-def
@@ -628,19 +686,41 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
     (jf-org-def
      "a" 'org-agenda
      "c" 'org-capture
-     "l" 'org-store-link
+     "C i" 'org-clock-in
+     "C o" 'org-clock-out
+     "C c" 'org-clock-cancel
+     "l" 'org-insert-link
+     "L" 'org-store-link
      "b" 'org-switchb
-     "r" 'jf-org-capture-refile)
+     "r" 'jf-org-deep-refile
+     "R" 'jf-org-deep-copy)
+
     :custom
-    (org-directory "~/Documents/org")
-    (org-agenda-files '("~/Documents/org/"))
+    (org-directory "~/Sync/org")
+    (org-agenda-files '("~/Sync/org/"))
     (org-default-notes-file "notes.org")
     (org-agenda-include-diary t)
     (org-src-window-setup 'current-window "Edit source code in the current window")
     (org-src-fontify-natively t "Highlight syntax in source blocks")
     (org-latex-to-pdf-process '("latexmk -f pdf %f") "Use pdflatex for export")
     (org-capture-templates jf-org-capture-templates)
-    (org-structure-template-alist (append org-structure-template-alist jf-org-structure-templates)))
+    (org-structure-template-alist (append org-structure-template-alist jf-org-structure-templates))
+    (org-clock-persist 'history)
+    (org-todo-keywords jf-org-todo-keywords)
+    (org-todo-keyword-faces jf-org-todo-faces)
+    (org-todo-state-tags-triggers jf-org-todo-state-tags-triggers)
+    (org-use-fast-todo-selection t)
+    (org-treat-S-cursor-todo-selection-as-state-change nil))
+#+END_SRC
+** Evil Org-mode
+#+BEGIN_SRC emacs-lisp
+  (use-package evil-org
+    :after (evil org)
+    :hook (org-mode . evil-org-mode)
+    :config
+    (evil-org-set-key-theme '(navigation insert textobjects additional calendar))
+    (require 'evil-org-agenda)
+    (evil-org-agenda-set-keys))
 #+END_SRC
 ** Pretty org-mode bullets
 Make bullets look choice
