@@ -244,7 +244,7 @@ doesn't cover properly by default.
        image-dired
        info
        ivy
-       js2-mode
+       rjsx-mode
        log-view
        man
        neotree
@@ -1180,9 +1180,10 @@ Jedi for autocompletion sources in python-mode.
     :company python-mode)
 #+END_SRC
 *** Javascript
-[[https://github.com/mooz/js2-mode][js2-mode]] improves the default js mode.
+rjsx-mode includes a javascript mode with support for react jsx files.
 #+BEGIN_SRC emacs-lisp
-  (use-package js2-mode
+  (use-package rjsx-mode
+    :pin melpa
     :mode "\\.js\\'"
     :interpreter "node")
 #+END_SRC
