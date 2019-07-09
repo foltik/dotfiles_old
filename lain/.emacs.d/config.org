@@ -363,12 +363,13 @@ Make =yes-or-no= prompts ask for =y-or-n= instead. Saves loads of time™.
 #+END_SRC
 *** Move Backup Files
 By default, emacs gunks up every folder with =file~= backups 
-and =#file#= lockfiles. Schlunk them all in =/tmp= instead.
+and =#file#= lockfiles. Schlunk them all in =.emacs.d/saves= instead.
 #+BEGIN_SRC emacs-lisp
-  (setq backup-directory-alist
-        `((".*" . ,temporary-file-directory)))
-  (setq auto-save-file-name-transforms
-        `((".*" ,temporary-file-directory t)))
+  (let ((save-dir (locate-user-emacs-file "saves")))
+    (setq backup-directory-alist
+          `((".*" . ,save-dir)))
+    (setq auto-save-file-name-transforms
+          `((".*" ,(concat save-dir "/") t))))
 #+END_SRC
 *** Secure auth-source
 GPG encrypt stored auth tokens from [[https://www.gnu.org/software/emacs/manual/html_mono/auth.html][auth-source]] instead of storing them in plaintext.
