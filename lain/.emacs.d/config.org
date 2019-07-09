@@ -1085,6 +1085,7 @@ Yasnippet adds support for custom snippets
 #+END_SRC
 ** Git
 *** Magit
+**** Core
 It's magic git!
 Keybinds [[https://github.com/emacs-evil/evil-magit][here]]
 #+BEGIN_SRC emacs-lisp
@@ -1093,12 +1094,124 @@ Keybinds [[https://github.com/emacs-evil/evil-magit][here]]
     (jf-git-def
       "b" 'magit-blame-addition
       "B" 'magit-blame-reverse
-      "s" 'magit-status))
+      "s" 'magit-status)
+    (:keymaps 'magit-status-mode-map
+      "i" 'jf-lcsr-issue-dispatch)
+    :config
+    (jf-lcsr-setup))
 #+END_SRC
 It's *evil* magic git!
 #+BEGIN_SRC emacs-lisp
 (use-package evil-magit
   :after (evil magit))
+#+END_SRC
+**** LCSR Issues
+My workplace has a very specific git workflow that basically boils down
+to creating =issue/$id/$description= and branching off it to =issue/id/$person= for
+each developer. What follows are some convenience functions for dealing with this.
+#+BEGIN_SRC emacs-lisp
+  (defun jf-lcsr-setup ()
+    (defvar jf-lcsr-me "jwf78")
+
+  ;;; Splitting and Joining Functions
+    (defun jf-lcsr-branch-id (branch)
+      (elt (split-string branch "/") 1))
+
+    (defun jf-lcsr-branch-tag (branch)
+      (elt (split-string branch "/") 2))
+
+    (defun jf-lcsr-branch (id tag)
+      (string-join `("issue" ,id ,tag) "/"))
+
+  ;;; Predicate Functions
+    (defun jf-lcsr-branch-base-p (branch)
+      (string-match "^\\(origin/\\)?issue/[0-9]\\{3,4\\}/[A-Za-z-]+$" branch))
+
+    (defun jf-lcsr-branch-user-p (branch)
+      (string-match "^\\(origin/\\)?issue/[0-9]\\{3,4\\}/[a-z]\\{2,3\\}[0-9]\\{1,5\\}$" branch))
+
+    (defun jf-lcsr-branch-my-p (branch)
+      (and (jf-lcsr-branch-user-p branch) (string= jf-lcsr-me (jf-lcsr-branch-tag branch))))
+
+    (defun jf-lcsr-branch-p (branch)
+      (or (jf-lcsr-branch-base-p branch) (jf-lcsr-branch-user-p branch)))
+
+  ;;; Utility Functions
+    (defun jf-lcsr-branches ()
+      (seq-filter #'jf-lcsr-branch-p (magit-list-branch-names)))
+
+    (defun jf-lcsr-find-id (id branches)
+      (seq-find
+       (lambda (b) (string= (jf-lcsr-branch-id b) id))
+       branches))
+
+    (defun jf-lcsr-branch-to-base (branch)
+      (if (jf-lcsr-branch-user-p branch)
+          (jf-lcsr-find-id
+           (jf-lcsr-branch-id branch)
+           (seq-filter #'jf-lcsr-branch-base-p (jf-lcsr-branches)))
+        branch))
+
+    (defun jf-lcsr-branch-to-my (branch)
+      (jf-lcsr-branch (jf-lcsr-branch-id branch) jf-lcsr-me))
+
+    (defun jf-lcsr-branch-to-toggle (branch)
+      (if (jf-lcsr-branch-base-p branch)
+          (jf-lcsr-branch-to-my branch)
+        (jf-lcsr-branch-to-base branch)))
+
+    (defun jf-lcsr-prepend-id (msg)
+      (concat "\"#" (jf-lcsr-branch-id (magit-get-current-branch)) " " msg "\""))
+
+    (defun jf-lcsr-commit-message (msg)
+      (jf-lcsr-prepend-id msg))
+
+    (defun jf-lcsr-merge-message (current source)
+      (jf-lcsr-prepend-id (concat "Merge branch " source " into " current)))
+
+  ;;; Navigation Functions
+    (defun jf-lcsr-checkout-base ()
+      (interactive)
+      (magit-checkout (jf-lcsr-branch-to-base (magit-get-current-branch))))
+
+    (defun jf-lcsr-checkout-my ()
+      (interactive)
+      (magit-checkout (jf-lcsr-branch-to-my (magit-get-current-branch))))
+
+    (defun jf-lcsr-checkout-toggle ()
+      (interactive)
+      (magit-checkout (jf-lcsr-branch-to-toggle (magit-get-current-branch))))
+
+  ;;; Committing Functions
+    (defun jf-lcsr-commit (msg)
+      (interactive "sMessage: ")
+      (let ((default-directory (magit-toplevel)))
+        (magit-run-git
+         "commit"
+         `(,(concat "-m " (jf-lcsr-commit-message msg))))))
+
+    (defun jf-lcsr-merge-toggle ()
+      (interactive)
+      (let ((current (magit-get-current-branch))
+            (source (jf-lcsr-branch-to-toggle (magit-get-current-branch))))
+        (magit-run-git-async
+         "merge"
+         `(,(concat "-m " (jf-lcsr-merge-message current source))) source)))
+
+    (defun jf-lcsr-mergeback ()
+      (interactive)
+      (jf-lcsr-checkout-base)
+      (jf-lcsr-merge-toggle))
+
+    (define-transient-command jf-lcsr-issue-dispatch ()
+      ["Navigation"
+       ("b b" "Checkout Feature <-> User" jf-lcsr-checkout-toggle)
+       ("b f" "Checkout Feature" jf-lcsr-checkout-base)
+       ("b u" "Checkout User" jf-lcsr-checkout-my)]
+      ["Commits"
+       ("c" "Commit with Tag" jf-lcsr-commit)
+       ("m t" "Merge Feature <-> User" jf-lcsr-merge-toggle)
+       ("m b" "Merge User -> Feature" jf-lcsr-mergeback)]))
 #+END_SRC
 *** Forge
 Magic GitHub facilities for git forges such as GitHub and GitLab!
