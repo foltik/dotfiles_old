@@ -291,7 +291,8 @@ Visual highlighting on evil motions
 #+BEGIN_SRC emacs-lisp
 (use-package evil-goggles
     :config
-    (evil-goggles-mode))
+    (evil-goggles-mode)
+    (evil-goggles-use-diff-faces))
 #+END_SRC
 * Emacs
 ** Defaults
@@ -535,10 +536,10 @@ All capture templates, from tasks to bookmarks.
            "**** TODO %^{task}\n%U\n%a\n%?\n")
           ("tt" "General (Date)" entry
            (file "refile.org")
-           "**** TODO %^{task}\n%U\n%a\nDue: %^t\n%?\n")
+           "**** TODO %^{task}\n%U\nDue: %^t\n%a\n%?\n")
           ("tT" "General (Date+Time)" entry
            (file "refile.org")
-           "**** TODO %^{task}\n%U\n%a\nDue: %^T\n%?\n")
+           "**** TODO %^{task}\n%U\nDue: %^T\n%a\n%?\n")
           ("tst" "School" entry
            (file "refile.org")
            "**** TODO %^{task}\n%U\n%a\nDue: %^t\nClass: %^{class}\n%?\n")
@@ -754,6 +755,7 @@ counsel-M-x will use it for sorting by usage.
     :general
     (jf-buffers-def
       "b" 'ivy-switch-buffer
+      "B" 'ibuffer
       "v" 'ivy-push-view
       "V" 'ivy-pop-view
       "c" 'jf-kill-current-buffer
@@ -777,7 +779,8 @@ A collection of ivy enhanced versions of common Emacs commands.
     (jf-help-def
       "a" 'counsel-apropos
       "f" 'counsel-describe-function
-      "k" 'counsel-descbinds
+      "k" 'describe-key
+      "K" 'counsel-descbinds
       "l" 'counsel-find-library
       "s" 'counsel-info-lookup-symbol
       "u" 'counsel-unicode-char
@@ -866,6 +869,7 @@ Define some *useful* helper functions
 
   (defun jf-indent-spaces (num)
     (interactive "nNumber of spaces: ")
+    (setq js2-basic-offset num)
     (setq tab-width num)
     (setq indent-tabs-mode nil))
 
@@ -1114,22 +1118,31 @@ each developer. What follows are some convenience functions for dealing with thi
   (defun jf-lcsr-setup ()
     (defvar jf-lcsr-me "jwf78")
 
-  ;;; Splitting and Joining Functions
-    (defun jf-lcsr-branch-id (branch)
-      (elt (split-string branch "/") 1))
-
-    (defun jf-lcsr-branch-tag (branch)
-      (elt (split-string branch "/") 2))
-
-    (defun jf-lcsr-branch (id tag)
-      (string-join `("issue" ,id ,tag) "/"))
-
-  ;;; Predicate Functions
+    ;;; Predicate Functions
     (defun jf-lcsr-branch-base-p (branch)
       (string-match "^\\(origin/\\)?issue/[0-9]\\{3,4\\}/[A-Za-z-]+$" branch))
 
     (defun jf-lcsr-branch-user-p (branch)
       (string-match "^\\(origin/\\)?issue/[0-9]\\{3,4\\}/[a-z]\\{2,3\\}[0-9]\\{1,5\\}$" branch))
+
+    (defun jf-lcsr-branch-origin-p (branch)
+      (string-match "^origin/issue/[0-9]\\{3,4\\}/[A-Za-z-]+$" branch))
+
+    ;;; Splitting and Joining Functions
+    (defun jf-lcsr-branch-id (branch)
+      (let ((lst (split-string branch "/")))
+        (if (jf-lcsr-branch-origin-p branch)
+            (elt lst 2)
+          (elt lst 1))))
+
+    (defun jf-lcsr-branch-tag (branch)
+      (let ((lst (split-string branch "/")))
+        (if (jf-lcsr-branch-origin-p branch)
+            (elt lst 3)
+          (elt lst 2))))
+
+    (defun jf-lcsr-branch (id tag)
+      (string-join `("issue" ,id ,tag) "/"))
 
     (defun jf-lcsr-branch-my-p (branch)
       (and (jf-lcsr-branch-user-p branch) (string= jf-lcsr-me (jf-lcsr-branch-tag branch))))
@@ -1137,20 +1150,29 @@ each developer. What follows are some convenience functions for dealing with thi
     (defun jf-lcsr-branch-p (branch)
       (or (jf-lcsr-branch-base-p branch) (jf-lcsr-branch-user-p branch)))
 
-  ;;; Utility Functions
+    (defun jf-lcsr-branch-id= (a b)
+      (string= (jf-lcsr-branch-id a) (jf-lcsr-branch-id b)))
+
+    ;;; Utility Functions
     (defun jf-lcsr-branches ()
       (seq-filter #'jf-lcsr-branch-p (magit-list-branch-names)))
+
+    (defun jf-lcsr-base-branches ()
+      (seq-filter #'jf-lcsr-branch-base-p (jf-lcsr-branches)))
 
     (defun jf-lcsr-find-id (id branches)
       (seq-find
        (lambda (b) (string= (jf-lcsr-branch-id b) id))
        branches))
 
+    (defun jf-lcsr-find-tag (tag branches)
+      (seq-find
+       (lambda (b) (string= (jf-lcsr-branch-tag b) tag))
+       branches))
+
     (defun jf-lcsr-branch-to-base (branch)
       (if (jf-lcsr-branch-user-p branch)
-          (jf-lcsr-find-id
-           (jf-lcsr-branch-id branch)
-           (seq-filter #'jf-lcsr-branch-base-p (jf-lcsr-branches)))
+          (jf-lcsr-find-id (jf-lcsr-branch-id branch) (jf-lcsr-base-branches))
         branch))
 
     (defun jf-lcsr-branch-to-my (branch)
@@ -1161,16 +1183,21 @@ each developer. What follows are some convenience functions for dealing with thi
           (jf-lcsr-branch-to-my branch)
         (jf-lcsr-branch-to-base branch)))
 
-    (defun jf-lcsr-prepend-id (msg)
-      (concat "\"#" (jf-lcsr-branch-id (magit-get-current-branch)) " " msg "\""))
+    (defun jf-lcsr-prepend-id (msg branch)
+      (if (jf-lcsr-branch-p branch)
+          (concat "#" (jf-lcsr-branch-id branch) " " msg)
+        msg))
 
     (defun jf-lcsr-commit-message (msg)
-      (jf-lcsr-prepend-id msg))
+      (jf-lcsr-prepend-id msg (magit-get-current-branch)))
 
     (defun jf-lcsr-merge-message (current source)
-      (jf-lcsr-prepend-id (concat "Merge branch " source " into " current)))
+      (let ((message (concat "Merge branch " source " into " current)))
+        (if (jf-lcsr-branch-id= source current)
+            (jf-lcsr-prepend-id message current)
+          (jf-lcsr-prepend-id (jf-lcsr-prepend-id message source) current))))
 
-  ;;; Navigation Functions
+    ;;; Navigation Functions
     (defun jf-lcsr-checkout-base ()
       (interactive)
       (magit-checkout (jf-lcsr-branch-to-base (magit-get-current-branch))))
@@ -1183,13 +1210,33 @@ each developer. What follows are some convenience functions for dealing with thi
       (interactive)
       (magit-checkout (jf-lcsr-branch-to-toggle (magit-get-current-branch))))
 
-  ;;; Committing Functions
+    (defun jf-lcsr-checkout-id (id)
+      (interactive
+       (list
+        (completing-read
+         "ID: "
+         (mapcar (lambda (b) (jf-lcsr-branch-id b))
+                 (jf-lcsr-base-branches)))))
+      (magit-checkout
+       (jf-lcsr-find-id id (jf-lcsr-base-branches))))
+
+    (defun jf-lcsr-checkout-tag (tag)
+      (interactive
+       (list
+        (completing-read
+         "Tag: "
+         (mapcar (lambda (b) (jf-lcsr-branch-tag b))
+                 (jf-lcsr-base-branches)))))
+      (magit-checkout
+       (jf-lcsr-find-tag tag (jf-lcsr-base-branches))))
+
+    ;;; Committing Functions
     (defun jf-lcsr-commit (msg)
       (interactive "sMessage: ")
       (let ((default-directory (magit-toplevel)))
         (magit-run-git
          "commit"
-         `(,(concat "-m " (jf-lcsr-commit-message msg))))))
+         `(,(concat "-m" (jf-lcsr-commit-message msg))))))
 
     (defun jf-lcsr-merge-toggle ()
       (interactive)
@@ -1204,15 +1251,48 @@ each developer. What follows are some convenience functions for dealing with thi
       (jf-lcsr-checkout-base)
       (jf-lcsr-merge-toggle))
 
+    (defun jf-lcsr-merge (source)
+      (interactive
+       (list
+        (completing-read
+         "Branch: "
+         (magit-list-branch-names))))
+      (magit-run-git-async
+       "merge"
+       `(,(concat "-m " (jf-lcsr-merge-message (magit-get-current-branch) source))) source))
+
+    ;; Misc functions
+    (defun jf-lcsr-issue-new (id tag source)
+      (interactive
+       (list
+        (read-string "ID: ")
+        (read-string "Tag: ")
+        (let ((input
+               (completing-read
+                "Branch Off (default master): "
+                (mapcar (lambda (b) (jf-lcsr-branch-tag b))
+                        (jf-lcsr-base-branches))
+                nil nil nil nil "master")))
+          (if (string= input "master")
+              input
+            (jf-lcsr-find-tag input (jf-lcsr-base-branches))))))
+      (let ((base-branch (jf-lcsr-branch id tag))
+            (my-branch (jf-lcsr-branch id jf-lcsr-me)))
+        (magit-branch-create base-branch source)
+        (magit-checkout base-branch)
+        (magit-branch-create my-branch base-branch)
+        (magit-checkout my-branch)))
+
     (define-transient-command jf-lcsr-issue-dispatch ()
       ["Navigation"
        ("b b" "Checkout Feature <-> User" jf-lcsr-checkout-toggle)
-       ("b f" "Checkout Feature" jf-lcsr-checkout-base)
-       ("b u" "Checkout User" jf-lcsr-checkout-my)]
+       ("b i" "Checkout ID" jf-lcsr-checkout-id)
+       ("b t" "Checkout Tag" jf-lcsr-checkout-tag)]
       ["Commits"
        ("c" "Commit with Tag" jf-lcsr-commit)
        ("m t" "Merge Feature <-> User" jf-lcsr-merge-toggle)
-       ("m b" "Merge User -> Feature" jf-lcsr-mergeback)]))
+       ("m b" "Merge User -> Feature" jf-lcsr-mergeback)
+       ("m m" "Merge" jf-lcsr-merge)]))
 #+END_SRC
 *** Forge
 Magic GitHub facilities for git forges such as GitHub and GitLab!
@@ -1232,6 +1312,7 @@ Older regions are more whitey and newer regions are more blacky.
       "H c" 'smeargle-clear))
 #+END_SRC
 ** Projects
+*** Projectile
 Projectile provides project-level features like
 make shortcuts and file switching
 #+BEGIN_SRC emacs-lisp
@@ -1259,6 +1340,17 @@ make shortcuts and file switching
     :custom
     (projectile-completion-system 'ivy)
     (projectile-project-search-path (list jf-projects-path)))
+#+END_SRC
+*** Projectile ibuffer
+Groups buffers in ibuffer by their project root directory.
+#+BEGIN_SRC emacs-lisp
+  (use-package ibuffer-projectile
+    :preface
+    (defun jf-ibuffer-hook ()
+      (ibuffer-projectile-set-filter-groups)
+      (unless (eq ibuffer-sorting-mode 'alphabetic)
+        (ibuffer-do-sort-by-alphabetic)))
+    :hook (ibuffer . #'jf-ibuffer-hook))
 #+END_SRC
 ** Languages
 *** Language Server Protocol
@@ -1473,4 +1565,16 @@ The std:: java build system
       :keymaps 'gradle-mode-map
       "b b" #'gradle-build
       "b r" #'jf-gradle-run-main))
+#+END_SRC
+*** GLSL
+Support for editing GLSL shader files.
+#+BEGIN_SRC emacs-lisp
+  (use-package glsl-mode
+    :mode ("\\.vert\\'"
+           "\\.frag\\'"
+           "\\.comp\\'"
+           "\\.glsl\\'"))
+
+  (use-package company-glsl
+    :company glsl-mode)
 #+END_SRC
