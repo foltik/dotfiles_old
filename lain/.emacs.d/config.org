@@ -832,6 +832,15 @@ Allows retrieving OpenWeatherMap forecasts in the minibuffer.
     (sunshine-appid "7caf100277f14845e7f354c6590a09cb")
     (sunshine-show-icons t))
 #+END_SRC
+** Kubernetes
+A porcelain like magit for kubernetes.
+#+BEGIN_SRC emacs-lisp
+  (use-package kubernetes
+      :commands kubernetes-overview)
+
+  (use-package kubernetes-evil
+      :after kubernetes)
+#+END_SRC
 * Programming
 ** Formatting
 *** Word Wrap
