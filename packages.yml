@@ -9,10 +9,12 @@ Command Line Tools:
       source: aur
   - ripgrep
   - exa
+  - hyperfine
   - git
   - htop
   - ranger
   - fasd
+  - fzf
 
 System Tools:
   - networkmanager
@@ -26,6 +28,9 @@ Terminal and Shell:
   - fish-fasd:
       source: fisher
       repo: fishgretel/fasd
+  - fish-fzf:
+      source: fisher
+      repo: jethrokuan/fzf
 
 Editors:
   - emacs:
