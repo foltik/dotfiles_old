@@ -1,6 +1,7 @@
 ### Environment Variables ###
 set -U fish_greeting
 set -U fish_user_paths ~/.local/bin
+set -U FZF_LEGACY_KEYBINDINGS 0
 
 # Mark fish as default shell
 set -gx SHELL /usr/bin/fish
