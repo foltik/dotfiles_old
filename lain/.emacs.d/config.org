@@ -1538,6 +1538,10 @@ cdlatex adds better TeX-specific template expansions and other niceties.
 #+BEGIN_SRC emacs-lisp
   (use-package cdlatex
     :hook (LaTeX-mode . cdlatex-mode)
+    :preface
+    (defun jf-larger-latex ()
+      (interactive)
+      (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5)))
     :custom
     (cdlatex-env-alist jf-cdlatex-envs)
     (cdlatex-command-alist jf-cdlatex-commands)
