@@ -11,7 +11,6 @@
 (defun jf-resume-gc ()
   (setq gc-cons-threshold jf-gc-threshold))
 
-
 (message "-> Initializing Electronic Macs...")
 
 ;; Don't garbage collect during init
@@ -20,5 +19,5 @@
 (jf-resume-gc)
 
 (message "-> Initialized in %s with %d GCs."
-	 (float-time (time-subtract after-init-time before-init-time))
-	 gcs-done)
+         (float-time (time-subtract after-init-time before-init-time))
+         gcs-done)

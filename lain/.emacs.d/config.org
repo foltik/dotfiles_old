@@ -612,8 +612,9 @@ the full buffer tags.
 Defines expansions with =<= followed by a string in org-mode.
 *** Source Blocks
 #+BEGIN_SRC emacs-lisp
-  (setq jf-org-source-structure-templates
-        '(("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC")))
+    (setq jf-org-source-structure-templates
+          '(("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC")
+            ("ipy" "#+BEGIN_SRC ipython :session :results raw drawer\n?\n#+END_SRC")))
 #+END_SRC
 *** All
 Tie it all together.
@@ -674,6 +675,12 @@ Goodize the refiling targets to allow refiling and copying to arbitrary subtrees
            ("NEXT" ("WAITING") ("CANCELLED") ("HOLD"))
            ("DONE" ("WAITING") ("CANCELLED") ("HOLD")))))
 #+END_SRC
+** Org Languages
+Languages which can be evaluated in Org buffers.
+#+BEGIN_SRC emacs-lisp
+  (setq jf-org-babel-languages
+	'((emacs-lisp . t) (ipython . t)))
+#+END_SRC
 ** Org-mode
 Keep org-mode up to date straight from the cow's utters.
 If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]].
@@ -683,7 +690,8 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
     :mode ("\\.org\\'" . org-mode)
     :hook ((org-mode . org-indent-mode)
            (org-capture-mode . evil-insert-state)
-           (org-capture-mode . jf-update-capture-tags))
+           (org-capture-mode . jf-update-capture-tags)
+           (org-babel-after-execute . org-display-inline-images))
 
     :config
     (org-clock-persistence-insinuate)
@@ -720,7 +728,10 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
     (org-todo-keyword-faces jf-org-todo-faces)
     (org-todo-state-tags-triggers jf-org-todo-state-tags-triggers)
     (org-use-fast-todo-selection t)
-    (org-treat-S-cursor-todo-selection-as-state-change nil))
+    (org-treat-S-cursor-todo-selection-as-state-change nil)
+    (org-babel-load-languages jf-org-babel-languages)
+    (org-confirm-babel-evaluate nil)
+    (org-startup-with-inline-images t))
 #+END_SRC
 ** Evil Org-mode
 #+BEGIN_SRC emacs-lisp
@@ -1437,6 +1448,11 @@ Mode for editing YAML files.
 #+BEGIN_SRC emacs-lisp
   (use-package yaml-mode
     :mode "\\.yaml\\'")
+**** ob-ipython
+Allows embedding ipython in org mode files. See the [[https://github.com/gregsexton/ob-ipython][github]] for tips, tricks, and tutorials.
+#+BEGIN_SRC emacs-lisp
+(use-package ob-ipython)
+#+END_SRC
 #+END_SRC
 
 *** Arch PKGBUILD
