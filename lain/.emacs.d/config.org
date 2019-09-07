@@ -1412,10 +1412,16 @@ Mode for editing markdown.
 #+END_SRC
 
 *** Python
-Jedi for autocompletion sources in python-mode.
+**** Jedi
+Auto completion in python-mode.
 #+BEGIN_SRC emacs-lisp
   (use-package company-jedi
     :company python-mode)
+#+END_SRC
+**** ob-ipython
+Allows embedding ipython in org mode files. See the [[https://github.com/gregsexton/ob-ipython][github]] for tips, tricks, and tutorials.
+#+BEGIN_SRC emacs-lisp
+(use-package ob-ipython)
 #+END_SRC
 *** Javascript
 rjsx-mode includes a javascript mode with support for react jsx files.
@@ -1452,11 +1458,6 @@ Mode for editing YAML files.
 #+BEGIN_SRC emacs-lisp
   (use-package yaml-mode
     :mode "\\.yaml\\'")
-**** ob-ipython
-Allows embedding ipython in org mode files. See the [[https://github.com/gregsexton/ob-ipython][github]] for tips, tricks, and tutorials.
-#+BEGIN_SRC emacs-lisp
-(use-package ob-ipython)
-#+END_SRC
 #+END_SRC
 
 *** Arch PKGBUILD
