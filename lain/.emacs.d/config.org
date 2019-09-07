@@ -453,12 +453,15 @@ Show line and column numbers in the modeline.
 *** Line Numbers
 Use the default emacs relative line numbers, but switch to absolute lines when in insert mode.
 #+BEGIN_SRC emacs-lisp
-  (use-package nlinum-relative
-    :config
-    (nlinum-relative-setup-evil)
-    :hook (prog-mode . nlinum-relative-mode))
+  (add-hook 'prog-mode-hook (lambda () (setq display-line-numbers 'absolute)))
+  (add-hook 'evil-insert-state-entry-hook (lambda () (when (bound-and-true-p display-line-numbers) (setq display-line-numbers 'absolute))))
+  (add-hook 'evil-insert-state-exit-hook (lambda () (when (bound-and-true-p display-line-numbers) (setq display-line-numbers 'relative))))
+  (add-hook 'evil-normal-state-entry-hook (lambda () (when (bound-and-true-p display-line-numbers) (setq display-line-numbers 'relative))))
+  (add-hook 'evil-normal-state-entry-hook (lambda () (when (bound-and-true-p display-line-numbers) (setq display-line-numbers 'absolute))))
+  (add-hook 'evil-visual-state-entry-hook (lambda () (when (bound-and-true-p display-line-numbers) (setq display-line-numbers 'relative))))
+  (add-hook 'evil-visual-state-entry-hook (lambda () (when (bound-and-true-p display-line-numbers) (setq display-line-numbers 'absolute))))
+  (add-hook 'display-line-numbers-hook (lambda () (when (evil-normal-state-p) (setq display-line-numbers 'relative))))
 #+END_SRC
-
 *** Show Matching Parens
 Shows matching parenthesis  
 #+BEGIN_SRC emacs-lisp
