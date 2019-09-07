@@ -1616,3 +1616,12 @@ Support for editing GLSL shader files.
   (use-package company-glsl
     :company glsl-mode)
 #+END_SRC
+*** Hoon
+Urbit programming language.
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'hoon-mode
+            (lambda ()
+              (define-key hoon-mode-map (kbd "C-c r") 'hoon-eval-region-in-urb)
+              (define-key hoon-mode-map (kbd "C-c b") 'hoon-eval-buffer-in-urb))
+              (jf-indent-spaces 2))
+#+END_SRC
