@@ -419,6 +419,11 @@ slow down with many garbage collections.
   (add-hook 'minibuffer-setup-hook #'jf-inhibit-gc)
   (add-hook 'minibuffer-exit-hook  #'jf-resume-gc)
 #+END_SRC
+*** Default Shell
+Fish breaks some things when used as the default shell, so just use bash.
+#+BEGIN_SRC emacs-lisp
+(setq-default shell-file-name "/bin/bash")
+#+END_SRC
 ** UI
 *** Font
 Engage a nice coding font.
