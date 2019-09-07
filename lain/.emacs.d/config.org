@@ -698,20 +698,21 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
 
     :general
     (jf-major-def
-     :keymaps 'org-mode-map
-     "e" 'org-export-dispatch
-     "a" 'org-attach)
+      :keymaps 'org-mode-map
+      "e" 'org-export-dispatch
+      "a" 'org-attach)
     (jf-org-def
-     "a" 'org-agenda
-     "c" 'org-capture
-     "C i" 'org-clock-in
-     "C o" 'org-clock-out
-     "C c" 'org-clock-cancel
-     "l" 'org-insert-link
-     "L" 'org-store-link
-     "b" 'org-switchb
-     "r" 'jf-org-deep-refile
-     "R" 'jf-org-deep-copy)
+      "a" 'org-agenda
+      "A" 'org-archive-to-archive-sibling
+      "c" 'org-capture
+      "C i" 'org-clock-in
+      "C o" 'org-clock-out
+      "C c" 'org-clock-cancel
+      "l" 'org-insert-link
+      "L" 'org-store-link
+      "b" 'org-switchb
+      "r" 'jf-org-deep-refile
+      "R" 'jf-org-deep-copy)
 
     :custom
     (org-directory "~/Sync/org")
@@ -900,6 +901,9 @@ Define some *useful* helper functions
     (setq js2-basic-offset num)
     (setq tab-width num)
     (setq indent-tabs-mode nil))
+
+  (setq-default indent-tabs-mode nil)
+  (setq-default tab-width 4)
 
   ;; Default to 4 spaces
   (add-hook 'prog-mode-hook #'jf-indent-4-spaces)
