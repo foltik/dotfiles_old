@@ -694,6 +694,7 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
            (org-babel-after-execute . org-display-inline-images))
 
     :config
+    ;; Needed to save clock history across emacs
     (org-clock-persistence-insinuate)
 
     :general
@@ -715,24 +716,30 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
       "R" 'jf-org-deep-copy)
 
     :custom
-    (org-directory "~/Sync/org")
-    (org-agenda-files '("~/Sync/org/"))
+    ;; Base options
+    (org-directory "~/Sync/org" "Default directory for all things org")
     (org-default-notes-file "notes.org")
+    ;; Agenda
+    (org-agenda-files '("~/Sync/org/"))
     (org-agenda-include-diary t)
-    (org-src-window-setup 'current-window "Edit source code in the current window")
-    (org-src-fontify-natively t "Highlight syntax in source blocks")
-    (org-latex-to-pdf-process '("latexmk -f pdf %f") "Use pdflatex for export")
-    (org-capture-templates jf-org-capture-templates)
-    (org-structure-template-alist (append org-structure-template-alist jf-org-structure-templates))
-    (org-clock-persist 'history)
+    (org-clock-persist 'history "Save clock history across emacs")
+    ;; TODO and capture stuff
     (org-todo-keywords jf-org-todo-keywords)
     (org-todo-keyword-faces jf-org-todo-faces)
     (org-todo-state-tags-triggers jf-org-todo-state-tags-triggers)
-    (org-use-fast-todo-selection t)
-    (org-treat-S-cursor-todo-selection-as-state-change nil)
+    (org-use-fast-todo-selection t "Use a prefix key instead of manual cycling for TODOs")
+    (org-capture-templates jf-org-capture-templates)
+    ;; Code Stuff
+    (org-structure-template-alist (append org-structure-template-alist jf-org-structure-templates))
     (org-babel-load-languages jf-org-babel-languages)
-    (org-confirm-babel-evaluate nil)
-    (org-startup-with-inline-images t))
+    (org-src-window-setup 'current-window "Edit source code in the current window")
+    (org-src-fontify-natively t "Highlight syntax in source blocks")
+    (org-latex-listings 'minted "Export org source blocks as code envs, not {verbose}")
+    (org-latex-packages-alist '(("" "minted")) "Add the minted package for code blocks to all org files")
+    (org-latex-to-pdf-process '("latexmk -e '$latex=q/latex %O -shell-escape %S/' -f pdf %f") "Use a single call to latexmk for export")
+    (org-treat-S-cursor-todo-selection-as-state-change nil "Disable S-cursor on TODOs to prevent avoiding the transition hooks")
+    (org-confirm-babel-evaluate nil "Don't ask every single time if I *really* want to evaluate that source block")
+    (org-startup-with-inline-images t "Load inline images when first opening a buffer"))
 #+END_SRC
 ** Evil Org-mode
 #+BEGIN_SRC emacs-lisp
