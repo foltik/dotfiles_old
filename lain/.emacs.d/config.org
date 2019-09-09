@@ -1,6 +1,10 @@
 * Packaging
 ** Package.el
-[[http://wikemacs.org/wiki/Package.el][Package.el]] is the built-in package manager in Emacs. This is where the fun begins.
+[[http://wikemacs.org/wiki/Package.el][Package.el]] is the built-in package manager in Emacs.
+
+Set up all the repositories that we're going to be downloading stuff from.
+
+This is where the fun begins.
 #+BEGIN_SRC emacs-lisp
   (require 'package)
   (setq package-archives
