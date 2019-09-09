@@ -205,8 +205,8 @@ A helper for defining procedural keyboard macros
      "K" #'evil-window-top
      "L" #'evil-window-far-right
      "h" #'evil-window-left
-     "j" #'evil-window-right
-     "k" #'evil-window-down
+     "j" #'evil-window-down
+     "k" #'evil-window-up
      "l" #'evil-window-right
      "o" #'other-frame)
 
