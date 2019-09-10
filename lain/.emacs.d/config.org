@@ -33,8 +33,9 @@ configuration all in once place. It's pretty much the basis of this entire confi
   (setq use-package-verbose t)
 #+END_SRC
 *** Custom Keywords
-A few useful =:keyword= macros that extend the vanilla =use-package= functionality.
+Useful =:keyword= macros that extend the vanilla =use-package= functionality.
 **** :company
+Automatically appends a company backend to the company backends alist when a mode is entered.
 #+BEGIN_SRC emacs-lisp
   (require 'derived)
 
@@ -92,10 +93,10 @@ A few useful =:keyword= macros that extend the vanilla =use-package= functionali
         (list :company)
         (nthcdr idx use-package-keywords))))
 #+END_SRC
-* Keybinds
+* Keybind Helpers
 ** which-key
 [[https://github.com/justbur/emacs-which-key][which-key]] displays a popup in the minibuffer that shows 
-keybindings following incomplete commands.
+and describes keybindings prefixed by incomplete commands.
 #+BEGIN_SRC emacs-lisp
   (use-package which-key
     :diminish
@@ -104,7 +105,8 @@ keybindings following incomplete commands.
 #+END_SRC
 ** General
 [[https://github.com/noctuid/general.el][General]] is an excellent keybind manager that adds *tons* of useful macros.
-Also set up a leader key and prefixes, like =\= in Vim.
+
+We first use it to set up a leader key, =SPC=, and prefixes; like =\= in Vim.
 #+BEGIN_SRC emacs-lisp
   (use-package general
     :config
@@ -149,7 +151,8 @@ Also set up a leader key and prefixes, like =\= in Vim.
       ("w" . "windows"))))
 #+END_SRC
 ** Macros
-A helper for defining procedural keyboard macros
+*** jf-kbd
+Helper functions for defining procedural keyboard macros
 #+BEGIN_SRC emacs-lisp
   (defun jf-replace-regexps-in-string (str regexps)
     "Replace all pairs of (regex . replacement) defined by REGEXPS in STR."
@@ -175,7 +178,7 @@ A helper for defining procedural keyboard macros
       (execute-kbd-macro (read-kbd-macro (jf-kbd str)))))
 
   (defmacro jf-kbd-defmacro (name &rest forms)
-    "Create an interactive function NAME with body FORMS, where the evaluation of each form is executed as a keyboard macro."
+    "Create an interactive function NAME with body FORMS, where each form is executed as a keyboard macro."
     `(defun ,name ()
        (interactive)
        ,@(mapcan (lambda (form) `((jf-kbd-exec ,form))) forms)))
@@ -183,6 +186,8 @@ A helper for defining procedural keyboard macros
 * Vim Emulation
 ** Evil
 [[https://github.com/emacs-evil/evil][Evil]] is pretty much the entirety of Vim in Emacs.
+
+Without it I would probably still be using vim.
 #+BEGIN_SRC emacs-lisp
   (use-package evil
     :diminish undo-tree-mode
@@ -201,18 +206,22 @@ A helper for defining procedural keyboard macros
     (evil-mode t)
 
     (jf-windows-def
+     "d" #'delete-window
      "-" #'jf-window-split
      "=" #'jf-window-vsplit
      "b" #'balance-windows
-     "H" #'evil-window-far-left
      "J" #'evil-window-bottom
      "K" #'evil-window-top
-     "L" #'evil-window-far-right
      "h" #'evil-window-left
      "j" #'evil-window-down
      "k" #'evil-window-up
      "l" #'evil-window-right
      "o" #'other-frame)
+
+    :general
+    (:keymaps 'override
+     :states 'normal
+     "C-x C-e" #'eval-region)
 
     :custom
     (evil-want-integration t)
@@ -270,8 +279,12 @@ An enhanced version of =f= in Vim.
 #+END_SRC
 *** Subword
 Make boundaries between words in camelCase act as separate words for evil motions.
+
+This is a departure from default vim behavior and down to personal preference;
+disable it if you don't like it, however I find it is useful.
 #+BEGIN_SRC emacs-lisp
   (use-package subword
+    :after evil
     :init
     (define-category ?U "Uppercase")
     (define-category ?u "Lowercase")
@@ -282,7 +295,7 @@ Make boundaries between words in camelCase act as separate words for evil motion
     (push '(?u . ?U) evil-cjk-word-separating-categories))
 #+END_SRC
 *** evil-surround
-Use =S= and a delimiter to surround in visual mode.
+Bind =S= and a delimiter to surround in visual mode.
 #+BEGIN_SRC emacs-lisp
 (use-package evil-surround
     :after evil
@@ -291,7 +304,7 @@ Use =S= and a delimiter to surround in visual mode.
     (global-evil-surround-mode 1))
 #+END_SRC
 *** evil-goggles
-Visual highlighting on evil motions
+Flash highlight on evil motions for better visual feedback of what's happening.
 #+BEGIN_SRC emacs-lisp
 (use-package evil-goggles
     :config
@@ -300,30 +313,11 @@ Visual highlighting on evil motions
 #+END_SRC
 * Emacs
 ** Defaults
-*** Configuration Editing
-Add functions for editing and reloading the Emacs config files.
-#+BEGIN_SRC emacs-lisp
-  (defun jf-edit-config ()
-    (interactive)
-    (find-file jf-config-file))
-
-  (defun jf-edit-init ()
-    (interactive)
-    (find-file jf-init-file))
-
-  (defun jf-reload-config ()
-    (interactive)
-    (org-babel-load-file jf-config-file))
-
-  (jf-files-def
-    "e"  (jf-create-wk-prefix "emacs files")
-    "ec" #'jf-edit-config
-    "ei" #'jf-edit-init
-    "er" #'jf-reload-config)
-#+END_SRC
 *** Add to Load Path
 Create and add a folder to the load path for local lisp files.
+
 The folder itself and all descendants will be added to the path.
+
 These packages will take precedence over other libraries with the same name.
 #+BEGIN_SRC emacs-lisp
   (unless (file-exists-p jf-load-path)
@@ -339,8 +333,7 @@ These packages will take precedence over other libraries with the same name.
            load-path)))
 #+END_SRC
 *** File Not Found Functions
-Offer to create parent folders when a file is opened
-Offer to create nonexistant parent directories.
+Offer to create nonexistant parent folders when a new file is opened
 #+BEGIN_SRC emacs-lisp
   (defun jf-create-nonexistant-directories ()
     (let ((parent-directory (file-name-directory buffer-file-name)))
@@ -353,7 +346,7 @@ Offer to create nonexistant parent directories.
 *** Customize Location
 Make changes in =M-x customize= go somewhere other than being schlunked into =init.el=.
 #+BEGIN_SRC emacs-lisp
-  (setq custom-file (concat user-emacs-directory "_customize.el"))
+  (setq custom-file (concat user-emacs-directory "customize.el"))
   (load custom-file t)
 #+END_SRC
 *** Disable Bell
@@ -376,8 +369,17 @@ and =#file#= lockfiles. Schlunk them all in =.emacs.d/saves= instead.
     (setq auto-save-file-name-transforms
           `((".*" ,(concat save-dir "/") t))))
 #+END_SRC
+*** Disable lockfiles
+On a single user system, lockfiles only serve to prevent concurrent
+editing from the same instance.
+
+They are sometimes annoying, so just disable them.
+#+BEGIN_SRC emacs-lisp
+  (setq create-lockfiles nil)
+#+END_SRC
 *** Secure auth-source
-GPG encrypt stored auth tokens from [[https://www.gnu.org/software/emacs/manual/html_mono/auth.html][auth-source]] instead of storing them in plaintext.
+GPG encrypt stored auth tokens from [[https://www.gnu.org/software/emacs/manual/html_mono/auth.html][auth-source]] instead of storing
+them in plaintext.
 #+BEGIN_SRC emacs-lisp
   (setq auth-sources '("~/.emacs.d/authinfo.gpg"))
 #+END_SRC
@@ -415,7 +417,7 @@ Print more stuff when running =C-x C-e= or =(eval-last-sexp)=
 #+BEGIN_SRC emacs-lisp
   (setq eval-expression-print-level 100)
 #+END_SRC
-*** GC in Minibuffer
+*** Inhibit GC in Minibuffer
 Don't garbage collect while the minibuffer is open, as heavy
 things like completion and searches are happening and will
 slow down with many garbage collections.
@@ -424,13 +426,19 @@ slow down with many garbage collections.
   (add-hook 'minibuffer-exit-hook  #'jf-resume-gc)
 #+END_SRC
 *** Default Shell
-Fish breaks some things when used as the default shell, so just use bash.
+I use fish and it breaks some things when used as the default shell,
+so just explicitly tell emacs to use bash.
 #+BEGIN_SRC emacs-lisp
 (setq-default shell-file-name "/bin/bash")
 #+END_SRC
+*** Scratch buffer message
+#+BEGIN_SRC emacs-lisp
+(setq initial-scratch-message ";; This buffer is for temporary text that is not saved, and for Lisp evaluation.
+;; To create a file, visit it with \\[counsel-find-file] and enter text in its buffer.")
+#+END_SRC
 ** UI
 *** Font
-Engage a nice coding font.
+Set up a nice coding font with ligatures.
 #+BEGIN_SRC emacs-lisp
   (add-to-list 'default-frame-alist '(font . "Fira Code 12"))
   (set-face-attribute 'default t :font "Fira Code 12")
@@ -446,13 +454,13 @@ Disable the useless cruft at the top of the screen.
 **** Diminish
 Adds support for =:diminish= in use-package declarations, which hides a mode from the modeline.
 #+BEGIN_SRC emacs-lisp
-(use-package diminish)
+  (use-package diminish)
 #+END_SRC
 **** Column Number
 Show line and column numbers in the modeline.
 #+BEGIN_SRC emacs-lisp
-(setq line-number-mode t)
-(setq column-number-mode t)
+  (setq line-number-mode t)
+  (setq column-number-mode t)
 #+END_SRC
 *** Line Numbers
 Use the default emacs relative line numbers, but switch to absolute lines when in insert mode.
@@ -467,18 +475,18 @@ Use the default emacs relative line numbers, but switch to absolute lines when i
   (add-hook 'display-line-numbers-hook (lambda () (when (evil-normal-state-p) (setq display-line-numbers 'relative))))
 #+END_SRC
 *** Show Matching Parens
-Shows matching parenthesis  
+Highlights matching parenthesis when the point is near one
 #+BEGIN_SRC emacs-lisp
-(require 'paren)
-(setq show-paren-delay 0)
-(show-paren-mode)
+  (require 'paren)
+  (setq show-paren-delay 0)
+  (show-paren-mode)
 #+END_SRC
 *** Scrolling
 Scroll smooth-ish-ly instead of jarring jumps.
 #+BEGIN_SRC emacs-lisp
-  (use-package smooth-scroll
-    :config
-    (smooth-scroll-mode t))
+  ;;(use-package smooth-scroll
+  ;;  :config
+  ;;  (smooth-scroll-mode t))
 #+END_SRC
 *** Dashboard
 Show a cool custom dashboard buffer on startup.
@@ -501,7 +509,8 @@ Show a cool custom dashboard buffer on startup.
 ** Themes
 *** pywal
 Fancy dynamic color scheme generation from desktop wallpapers.
-Requires additional setup on the machine itself.
+
+Requires additional setup per-machine.
 #+BEGIN_SRC emacs-lisp
   (defvar jf-theme-pywal-path "~/.cache/wal/colors.el" "Path to the colorscheme generated by pywal.")
 
@@ -509,7 +518,7 @@ Requires additional setup on the machine itself.
     (load-file jf-theme-pywal-path))
 #+END_SRC
 *** spacemacs
-This theme is pretty fancy and has lots of supported modes.
+A pretty fancy theme that has lots of supported modes.
 #+BEGIN_SRC emacs-lisp
   (unless (package-installed-p 'spacemacs-theme)
     (package-install 'spacemacs-theme))
@@ -519,14 +528,15 @@ This theme is pretty fancy and has lots of supported modes.
 #+END_SRC
 *** Transparency
 Sets the window's transparency, to better admire choice wallpapers.
+
 The first number in the alpha section applies when the window is
 active, the second when it's inactive.
 #+BEGIN_SRC emacs-lisp
-(set-frame-parameter (selected-frame) 'alpha 85)
-(add-to-list 'default-frame-alist '(alpha . 85))
+  (set-frame-parameter (selected-frame) 'alpha 85)
+  (add-to-list 'default-frame-alist '(alpha . 85))
 #+END_SRC
-    
 *** Helpers
+Keep track of the current theme and apply it at startup
 #+BEGIN_SRC emacs-lisp
   (defvar jf-theme #'jf-theme-spacemacs "Theme function to call.")
 
@@ -536,9 +546,53 @@ active, the second when it's inactive.
 
   (jf-apply-theme)
 #+END_SRC
+** Keybinds
+*** Files
+Define and bind functions for managing files, including emacs config files.
+#+BEGIN_SRC emacs-lisp
+  (defun jf-edit-config ()
+    (interactive)
+    (find-file jf-config-org-file))
+
+  (defun jf-edit-init ()
+    (interactive)
+    (find-file jf-init-file))
+
+  (defun jf-reload-config ()
+    (interactive)
+    (org-babel-load-file jf-config-file))
+
+  (defun jf-byte-compile-config ()
+    (interactive)
+    (byte-compile-file jf-init-file)
+    (byte-compile-file jf-config-file))
+
+  (jf-files-def
+    "r"  #'revert-buffer
+    "e"  (jf-create-wk-prefix "emacs files")
+    "ec" #'jf-edit-config
+    "ei" #'jf-edit-init
+    "er" #'jf-reload-config
+    "eb" #'jf-byte-compile-config)
+#+END_SRC
+*** Buffers
+Define and bind some functions for managing buffers.
+#+BEGIN_SRC emacs-lisp
+  (defun jf-kill-current-buffer ()
+    (interactive)
+    (kill-buffer (current-buffer)))
+  (defun jf-kill-all-buffers ()
+    (interactive)
+    (seq-do 'kill-buffer (buffer-list)))
+
+  (jf-buffers-def
+    "B" 'ibuffer
+    "c" 'jf-kill-current-buffer
+    "C" 'jf-kill-all-buffers)
+#+END_SRC
 * Organization
 ** Capture Templates
-All capture templates, from tasks to bookmarks.
+All capture templates, from tasks to bookmarks. Capture dispatch is invoked with `SPC o c`.
 *** Tasks
 #+BEGIN_SRC emacs-lisp
   (setq jf-org-capture-task-templates
@@ -589,7 +643,7 @@ All capture templates, from tasks to bookmarks.
 *** Protocol
 #+BEGIN_SRC emacs-lisp
   (setq jf-org-capture-protocol-templates
-        '(("w" "Website" entry
+        '(("w" "Website [Protocol]" entry
            (file "refile.org")
            "** [[%:link][%:description%?]] :LINK:\n%U\n%a\n%i\n%?")))
 #+END_SRC
@@ -614,22 +668,31 @@ the full buffer tags.
 #+END_SRC
 ** Structure Templates
 Defines expansions with =<= followed by a string in org-mode.
+
+For example, =<el TAB= will insert an elisp source block.
 *** Source Blocks
 #+BEGIN_SRC emacs-lisp
-    (setq jf-org-source-structure-templates
-          '(("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC")
-            ("ipy" "#+BEGIN_SRC ipython :session :results raw drawer\n?\n#+END_SRC")))
+  (setq jf-org-source-structure-templates
+        '(("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC")
+          ("ipy" "#+BEGIN_SRC ipython :session :results raw drawer\n?\n#+END_SRC")))
+#+END_SRC
+*** Structure
+#+BEGIN_SRC emacs-lisp
+  (setq jf-org-structure-templates '())
 #+END_SRC
 *** All
 Tie it all together.
 #+BEGIN_SRC emacs-lisp
-(setq jf-org-structure-templates
-    (append
-        jf-org-source-structure-templates))
+  (setq jf-org-structure-templates
+        (append
+         jf-org-structure-templates
+         jf-org-source-structure-templates))
 #+END_SRC
 ** Structure Editing
 *** Refile/Copy Targets
 Goodize the refiling targets to allow refiling and copying to arbitrary subtrees.
+
+Useful within org-capture to refile to a specific deeper heading in a file.
 #+BEGIN_SRC emacs-lisp
   (defun jf-org-deep-refile ()
     (interactive)
@@ -646,6 +709,9 @@ Goodize the refiling targets to allow refiling and copying to arbitrary subtrees
 #+END_SRC
 ** TODOs
 *** States
+Add some additional TODO states (=C-c C-t= on a heading).
+
+The general workflow is TODO -> NEXT -> DONE, with some exceptions like WAITING and CANCELLED.
 #+BEGIN_SRC emacs-lisp
   (setq jf-org-todo-keywords
         '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
@@ -679,13 +745,25 @@ Goodize the refiling targets to allow refiling and copying to arbitrary subtrees
            ("NEXT" ("WAITING") ("CANCELLED") ("HOLD"))
            ("DONE" ("WAITING") ("CANCELLED") ("HOLD")))))
 #+END_SRC
-** Org Languages
-Languages which can be evaluated in Org buffers.
+** Evil org
+Spice up org mode with some deliciously evil bindings.
 #+BEGIN_SRC emacs-lisp
-  (setq jf-org-babel-languages
-	'((emacs-lisp . t) (ipython . t)))
+  (use-package evil-org
+    :after (evil org)
+    :hook (org-mode . evil-org-mode)
+    :config
+    (evil-org-set-key-theme '(navigation insert textobjects additional calendar))
+    (require 'evil-org-agenda)
+    (evil-org-agenda-set-keys))
 #+END_SRC
-** Org-mode
+** Pretty bullets
+Make bullets indent content and look choice
+#+BEGIN_SRC emacs-lisp
+  (use-package org-bullets
+    :after org
+    :hook (org-mode . org-bullets-mode))
+#+END_SRC
+** Org
 Keep org-mode up to date straight from the cow's utters.
 If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]].
 #+BEGIN_SRC emacs-lisp
@@ -735,7 +813,7 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
     (org-capture-templates jf-org-capture-templates)
     ;; Code Stuff
     (org-structure-template-alist (append org-structure-template-alist jf-org-structure-templates))
-    (org-babel-load-languages jf-org-babel-languages)
+    (org-babel-load-languages '((emacs-lisp . t) (ipython . t)))
     (org-src-window-setup 'current-window "Edit source code in the current window")
     (org-src-fontify-natively t "Highlight syntax in source blocks")
     (org-latex-listings 'minted "Export org source blocks as code envs, not {verbose}")
@@ -744,22 +822,6 @@ If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]
     (org-treat-S-cursor-todo-selection-as-state-change nil "Disable S-cursor on TODOs to prevent avoiding the transition hooks")
     (org-confirm-babel-evaluate nil "Don't ask every single time if I *really* want to evaluate that source block")
     (org-startup-with-inline-images t "Load inline images when first opening a buffer"))
-#+END_SRC
-** Evil Org-mode
-#+BEGIN_SRC emacs-lisp
-  (use-package evil-org
-    :after (evil org)
-    :hook (org-mode . evil-org-mode)
-    :config
-    (evil-org-set-key-theme '(navigation insert textobjects additional calendar))
-    (require 'evil-org-agenda)
-    (evil-org-agenda-set-keys))
-#+END_SRC
-** Pretty org-mode bullets
-Make bullets look choice
-#+BEGIN_SRC emacs-lisp
-  (use-package org-bullets
-    :hook (org-mode . org-bullets-mode))
 #+END_SRC
 * Communication
 * Web
@@ -773,6 +835,7 @@ counsel-M-x will use it for sorting by usage.
 (use-package smex)
 #+END_SRC
 *** Ivy
+[[https://github.com/abo-abo/swiper][Ivy]] has most of the buffer-related commands.
 #+BEGIN_SRC emacs-lisp
   (use-package ivy
     :init
@@ -786,11 +849,8 @@ counsel-M-x will use it for sorting by usage.
     :general
     (jf-buffers-def
       "b" 'ivy-switch-buffer
-      "B" 'ibuffer
       "v" 'ivy-push-view
-      "V" 'ivy-pop-view
-      "c" 'jf-kill-current-buffer
-      "C" 'jf-kill-all-buffers)
+      "V" 'ivy-pop-view)
 
     :custom
     (ivy-use-virtual-buffers t)
@@ -798,6 +858,8 @@ counsel-M-x will use it for sorting by usage.
 #+END_SRC
 *** Counsel
 A collection of ivy enhanced versions of common Emacs commands.
+
+Bind up some useful ones.
 #+BEGIN_SRC emacs-lisp
   (use-package counsel
     :general
@@ -866,15 +928,16 @@ Allows retrieving OpenWeatherMap forecasts in the minibuffer.
 ** Kubernetes
 A porcelain like magit for kubernetes.
 #+BEGIN_SRC emacs-lisp
-  (use-package kubernetes
-      :commands kubernetes-overview)
+  ;;(use-package kubernetes
+  ;;    :commands kubernetes-overview)
 
-  (use-package kubernetes-evil
-      :after kubernetes)
+  ;;(use-package kubernetes-evil
+  ;;    :after kubernetes)
 #+END_SRC
 * Programming
 ** Formatting
 *** Word Wrap
+Add a command for setting the word wrap column. When enabled, use =M-q= to wrap the current block.
 #+BEGIN_SRC emacs-lisp
   (defun jf-word-wrap (column)
     "Enable auto refill mode at COLUMN."
@@ -882,13 +945,15 @@ A porcelain like magit for kubernetes.
     (setq-local fill-column column)
     (refill-mode))
 
-  (defun jf-nowrap ()
+  (defun jf-word-wrap-off ()
     "Disable auto refill mode."
     (interactive)
     (refill-mode))
 #+END_SRC
 *** Indentation
-Set some *sane* defaults
+How code should be 'dented.
+**** Defaults
+Set some *sane* defaults for indentation.
 #+BEGIN_SRC emacs-lisp
 (setq jf-tab-width 4)
 (setq-default python-indent-offset jf-tab-width)
@@ -899,7 +964,8 @@ Set some *sane* defaults
 ; Eat the whole tab when I press backspace
 (setq backward-delete-char-untabify-method 'hungry)
 #+END_SRC
-Define some *useful* helper functions
+**** Helpers
+Define some useful helper functions related to indentation used later in the config.
 #+BEGIN_SRC emacs-lisp
   (defun jf-indent-tabs (width)
     (interactive "nTab width: ")
@@ -945,7 +1011,7 @@ Define some *useful* helper functions
 #+END_SRC
 *** Parentheses
 **** Smartparens
-[[https://github.com/Fuco1/smartparens][Smartparens]] handles parens for languages that aren't lispy.
+[[https://github.com/Fuco1/smartparens][Smartparens]] handles electric parens and navigation for languages that aren't lispy.
 #+BEGIN_SRC emacs-lisp
   (use-package smartparens
     :diminish
@@ -1075,6 +1141,7 @@ pretty-mode left off. See list of unicode symbols that can be used [[https://en.
   (add-hook 'python-mode-hook #'jf-prettify-python)
 #+END_SRC
 *** Pretty fonts
+Enables ligatures from fira-code to be used with prettify-symbols-mode.
 #+BEGIN_SRC emacs-lisp
   (use-package pretty-fonts
     :load-path jf-load-path
@@ -1084,7 +1151,7 @@ pretty-mode left off. See list of unicode symbols that can be used [[https://en.
     (pretty-fonts-set-fontsets-for-fira-code))
 #+END_SRC
 *** Rainbow Delimiters
-Make it easier to spot sexp depth by pairing delimiter colors.
+Make it easier to spot sexp depth by pairing matching delimiters with rainbow colors.
 #+BEGIN_SRC emacs-lisp
   (use-package rainbow-delimiters
     :hook (prog-mode . rainbow-delimiters-mode))
@@ -1098,8 +1165,7 @@ Flycheck highlights syntax errors in a few languages.
     :custom (flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
 #+END_SRC
 *** Column 80 Highlight
-Add a hotkey for highlighting column 80
-and activate it in =prog-mode=
+Add a hotkey for highlighting column 80 in prog-mode
 #+BEGIN_SRC emacs-lisp
   (use-package fill-column-indicator
     :init
@@ -1131,7 +1197,7 @@ documentation popups when idling on a completion candidate.
     :hook (company-mode . company-quickhelp-mode))
 #+END_SRC
 ** Snippets
-Yasnippet adds support for custom snippets
+Yasnippet adds support for custom snippets, invoked by inputting a prefix and pressing =TAB=.
 #+BEGIN_SRC emacs-lisp
   (use-package yasnippet
     :hook (prog-mode . yas-minor-mode)
@@ -1140,7 +1206,6 @@ Yasnippet adds support for custom snippets
      '("~/.emacs.d/snippets"
        "~/.emacs.d/elpa/yasnippet-snippets-0.6/snippets")))
 #+END_SRC
-
 ** Debugging
 *** Realgud
 [[https://github.com/realgud/realgud][Realgud]] is a modular frontend for many debuggers, right in Emacs.
@@ -1182,188 +1247,287 @@ It's *evil* magic git!
   :after (evil magit))
 #+END_SRC
 **** LCSR Issues
-My workplace has a very specific git workflow that basically boils down
-to creating =issue/$id/$description= and branching off it to =issue/id/$person= for
-each developer. What follows are some convenience functions for dealing with this.
+My workplace has a very specific git workflow that basically boils
+down to creating =issue/$id/$description= and branching off it to
+=issue/$id/$person= for each developer, then merging back to the base.
+What follows are some workflow automation functions and integrations
+for dealing with this.
+***** Constants
 #+BEGIN_SRC emacs-lisp
-  (defun jf-lcsr-setup ()
-    (defvar jf-lcsr-me "jwf78")
+  (defvar jf-lcsr-me "jwf78")
+#+END_SRC
+***** Predicates
+#+BEGIN_SRC emacs-lisp
+  (defun jf-lcsr-branch-base-p (branch)
+    (string-match "^\\(origin/\\)?issue/[0-9]\\{2,4\\}/[A-Za-z-]+$" branch))
 
-    ;;; Predicate Functions
-    (defun jf-lcsr-branch-base-p (branch)
-      (string-match "^\\(origin/\\)?issue/[0-9]\\{3,4\\}/[A-Za-z-]+$" branch))
+  (defun jf-lcsr-branch-user-p (branch)
+    (string-match "^\\(origin/\\)?issue/[0-9]\\{2,4\\}/[a-z]\\{2,3\\}[0-9]\\{1,5\\}$" branch))
 
-    (defun jf-lcsr-branch-user-p (branch)
-      (string-match "^\\(origin/\\)?issue/[0-9]\\{3,4\\}/[a-z]\\{2,3\\}[0-9]\\{1,5\\}$" branch))
+  (defun jf-lcsr-branch-origin-p (branch)
+    (string-match "^origin/issue/[0-9]\\{2,4\\}/[A-Za-z-]+$" branch))
 
-    (defun jf-lcsr-branch-origin-p (branch)
-      (string-match "^origin/issue/[0-9]\\{3,4\\}/[A-Za-z-]+$" branch))
+  (defun jf-lcsr-branch-my-p (branch)
+    (and (jf-lcsr-branch-user-p branch) (string= jf-lcsr-me (jf-lcsr-branch-tag branch))))
 
-    ;;; Splitting and Joining Functions
-    (defun jf-lcsr-branch-id (branch)
-      (let ((lst (split-string branch "/")))
-        (if (jf-lcsr-branch-origin-p branch)
-            (elt lst 2)
-          (elt lst 1))))
+  (defun jf-lcsr-branch-p (branch)
+    (or (jf-lcsr-branch-base-p branch) (jf-lcsr-branch-user-p branch)))
 
-    (defun jf-lcsr-branch-tag (branch)
-      (let ((lst (split-string branch "/")))
-        (if (jf-lcsr-branch-origin-p branch)
-            (elt lst 3)
-          (elt lst 2))))
+  (defun jf-lcsr-branch-id= (a b)
+    (string= (jf-lcsr-branch-id a) (jf-lcsr-branch-id b)))
+#+END_SRC
+***** Splitting/Joining
+#+BEGIN_SRC emacs-lisp
+  (defun jf-lcsr-branch (id tag)
+    (string-join `("issue" ,id ,tag) "/"))
 
-    (defun jf-lcsr-branch (id tag)
-      (string-join `("issue" ,id ,tag) "/"))
+  (defun jf-lcsr-branch-id (branch)
+    (let ((lst (split-string branch "/")))
+      (if (jf-lcsr-branch-origin-p branch)
+          (elt lst 2)
+        (elt lst 1))))
 
-    (defun jf-lcsr-branch-my-p (branch)
-      (and (jf-lcsr-branch-user-p branch) (string= jf-lcsr-me (jf-lcsr-branch-tag branch))))
+  (defun jf-lcsr-branch-tag (branch)
+    (let ((lst (split-string branch "/")))
+      (if (jf-lcsr-branch-origin-p branch)
+          (elt lst 3)
+        (elt lst 2))))
+#+END_SRC
+***** Listing/Searching
+#+BEGIN_SRC emacs-lisp
+  (defun jf-lcsr-branches ()
+    (seq-filter #'jf-lcsr-branch-p (magit-list-branch-names)))
 
-    (defun jf-lcsr-branch-p (branch)
-      (or (jf-lcsr-branch-base-p branch) (jf-lcsr-branch-user-p branch)))
+  (defun jf-lcsr-base-branches ()
+    (seq-filter #'jf-lcsr-branch-base-p (jf-lcsr-branches)))
 
-    (defun jf-lcsr-branch-id= (a b)
-      (string= (jf-lcsr-branch-id a) (jf-lcsr-branch-id b)))
+  (defun jf-lcsr-find-id (id branches)
+    (seq-find
+     (lambda (b) (string= (jf-lcsr-branch-id b) id))
+     branches))
 
-    ;;; Utility Functions
-    (defun jf-lcsr-branches ()
-      (seq-filter #'jf-lcsr-branch-p (magit-list-branch-names)))
+  (defun jf-lcsr-find-tag (tag branches)
+    (seq-find
+     (lambda (b) (string= (jf-lcsr-branch-tag b) tag))
+     branches))
+#+END_SRC
+***** Navigation
+#+BEGIN_SRC emacs-lisp
+  (defun jf-lcsr-branch-to-base (branch)
+    (if (jf-lcsr-branch-user-p branch)
+        (jf-lcsr-find-id (jf-lcsr-branch-id branch) (jf-lcsr-base-branches))
+      branch))
 
-    (defun jf-lcsr-base-branches ()
-      (seq-filter #'jf-lcsr-branch-base-p (jf-lcsr-branches)))
+  (defun jf-lcsr-branch-to-my (branch)
+    (jf-lcsr-branch (jf-lcsr-branch-id branch) jf-lcsr-me))
 
-    (defun jf-lcsr-find-id (id branches)
-      (seq-find
-       (lambda (b) (string= (jf-lcsr-branch-id b) id))
-       branches))
+  (defun jf-lcsr-branch-to-toggle (branch)
+    (if (jf-lcsr-branch-base-p branch)
+        (jf-lcsr-branch-to-my branch)
+      (jf-lcsr-branch-to-base branch)))
 
-    (defun jf-lcsr-find-tag (tag branches)
-      (seq-find
-       (lambda (b) (string= (jf-lcsr-branch-tag b) tag))
-       branches))
+  (defun jf-lcsr-checkout-base ()
+    (interactive)
+    (magit-checkout (jf-lcsr-branch-to-base (magit-get-current-branch))))
 
-    (defun jf-lcsr-branch-to-base (branch)
-      (if (jf-lcsr-branch-user-p branch)
-          (jf-lcsr-find-id (jf-lcsr-branch-id branch) (jf-lcsr-base-branches))
-        branch))
+  (defun jf-lcsr-checkout-my ()
+    (interactive)
+    (magit-checkout (jf-lcsr-branch-to-my (magit-get-current-branch))))
 
-    (defun jf-lcsr-branch-to-my (branch)
-      (jf-lcsr-branch (jf-lcsr-branch-id branch) jf-lcsr-me))
+  (defun jf-lcsr-checkout-toggle ()
+    (interactive)
+    (magit-checkout (jf-lcsr-branch-to-toggle (magit-get-current-branch))))
 
-    (defun jf-lcsr-branch-to-toggle (branch)
-      (if (jf-lcsr-branch-base-p branch)
-          (jf-lcsr-branch-to-my branch)
-        (jf-lcsr-branch-to-base branch)))
+  (defun jf-lcsr-checkout-id (id)
+    (interactive
+     (list
+      (completing-read
+       "ID: "
+       (mapcar (lambda (b) (jf-lcsr-branch-id b))
+               (jf-lcsr-base-branches)))))
+    (magit-checkout
+     (jf-lcsr-find-id id (jf-lcsr-base-branches))))
 
-    (defun jf-lcsr-prepend-id (msg branch)
-      (if (jf-lcsr-branch-p branch)
-          (concat "#" (jf-lcsr-branch-id branch) " " msg)
-        msg))
+  (defun jf-lcsr-checkout-tag (tag)
+    (interactive
+     (list
+      (completing-read
+       "Tag: "
+       (mapcar (lambda (b) (jf-lcsr-branch-tag b))
+               (jf-lcsr-base-branches)))))
+    (magit-checkout
+     (jf-lcsr-find-tag tag (jf-lcsr-base-branches))))
+#+END_SRC
+***** Commits
+#+BEGIN_SRC emacs-lisp
+  (defun jf-lcsr-prepend-id (msg branch)
+    (if (jf-lcsr-branch-p branch)
+        (concat "#" (jf-lcsr-branch-id branch) " " msg)
+      msg))
 
-    (defun jf-lcsr-commit-message (msg)
-      (jf-lcsr-prepend-id msg (magit-get-current-branch)))
+  (defun jf-lcsr-commit-message (msg)
+    (jf-lcsr-prepend-id msg (magit-get-current-branch)))
 
-    (defun jf-lcsr-merge-message (current source)
-      (let ((message (concat "Merge branch " source " into " current)))
-        (if (jf-lcsr-branch-id= source current)
-            (jf-lcsr-prepend-id message current)
-          (jf-lcsr-prepend-id (jf-lcsr-prepend-id message source) current))))
+  (defun jf-lcsr-merge-message (current source)
+    (let ((message (concat "Merge branch " source " into " current)))
+      (if (jf-lcsr-branch-id= source current)
+          (jf-lcsr-prepend-id message current)
+        (jf-lcsr-prepend-id (jf-lcsr-prepend-id message source) current))))
 
-    ;;; Navigation Functions
-    (defun jf-lcsr-checkout-base ()
-      (interactive)
-      (magit-checkout (jf-lcsr-branch-to-base (magit-get-current-branch))))
+  (defun jf-lcsr-commit (msg)
+    (interactive "sMessage: ")
+    (let ((default-directory (magit-toplevel)))
+      (magit-run-git
+       "commit"
+       `(,(concat "-m" (jf-lcsr-commit-message msg))))))
 
-    (defun jf-lcsr-checkout-my ()
-      (interactive)
-      (magit-checkout (jf-lcsr-branch-to-my (magit-get-current-branch))))
-
-    (defun jf-lcsr-checkout-toggle ()
-      (interactive)
-      (magit-checkout (jf-lcsr-branch-to-toggle (magit-get-current-branch))))
-
-    (defun jf-lcsr-checkout-id (id)
-      (interactive
-       (list
-        (completing-read
-         "ID: "
-         (mapcar (lambda (b) (jf-lcsr-branch-id b))
-                 (jf-lcsr-base-branches)))))
-      (magit-checkout
-       (jf-lcsr-find-id id (jf-lcsr-base-branches))))
-
-    (defun jf-lcsr-checkout-tag (tag)
-      (interactive
-       (list
-        (completing-read
-         "Tag: "
-         (mapcar (lambda (b) (jf-lcsr-branch-tag b))
-                 (jf-lcsr-base-branches)))))
-      (magit-checkout
-       (jf-lcsr-find-tag tag (jf-lcsr-base-branches))))
-
-    ;;; Committing Functions
-    (defun jf-lcsr-commit (msg)
-      (interactive "sMessage: ")
-      (let ((default-directory (magit-toplevel)))
-        (magit-run-git
-         "commit"
-         `(,(concat "-m" (jf-lcsr-commit-message msg))))))
-
-    (defun jf-lcsr-merge-toggle ()
-      (interactive)
-      (let ((current (magit-get-current-branch))
-            (source (jf-lcsr-branch-to-toggle (magit-get-current-branch))))
-        (magit-run-git-async
-         "merge"
-         `(,(concat "-m " (jf-lcsr-merge-message current source))) source)))
-
-    (defun jf-lcsr-mergeback ()
-      (interactive)
-      (jf-lcsr-checkout-base)
-      (jf-lcsr-merge-toggle))
-
-    (defun jf-lcsr-merge (source)
-      (interactive
-       (list
-        (completing-read
-         "Branch: "
-         (magit-list-branch-names))))
+  (defun jf-lcsr-merge-toggle ()
+    (interactive)
+    (let ((current (magit-get-current-branch))
+          (source (jf-lcsr-branch-to-toggle (magit-get-current-branch))))
       (magit-run-git-async
        "merge"
-       `(,(concat "-m " (jf-lcsr-merge-message (magit-get-current-branch) source))) source))
+       `(,(concat "-m " (jf-lcsr-merge-message current source))) source)))
 
-    ;; Misc functions
-    (defun jf-lcsr-issue-new (id tag source)
-      (interactive
-       (list
-        (read-string "ID: ")
-        (read-string "Tag: ")
-        (let ((input
-               (completing-read
-                "Branch Off (default master): "
-                (mapcar (lambda (b) (jf-lcsr-branch-tag b))
-                        (jf-lcsr-base-branches))
-                nil nil nil nil "master")))
-          (if (string= input "master")
-              input
-            (jf-lcsr-find-tag input (jf-lcsr-base-branches))))))
-      (let ((base-branch (jf-lcsr-branch id tag))
-            (my-branch (jf-lcsr-branch id jf-lcsr-me)))
-        (magit-branch-create base-branch source)
-        (magit-checkout base-branch)
-        (magit-branch-create my-branch base-branch)
-        (magit-checkout my-branch)))
+  (defun jf-lcsr-mergeback ()
+    (interactive)
+    (jf-lcsr-checkout-base)
+    (jf-lcsr-merge-toggle))
 
-    (define-transient-command jf-lcsr-issue-dispatch ()
-      ["Navigation"
-       ("b b" "Checkout Feature <-> User" jf-lcsr-checkout-toggle)
-       ("b i" "Checkout ID" jf-lcsr-checkout-id)
-       ("b t" "Checkout Tag" jf-lcsr-checkout-tag)]
-      ["Commits"
-       ("c" "Commit with Tag" jf-lcsr-commit)
-       ("m t" "Merge Feature <-> User" jf-lcsr-merge-toggle)
-       ("m b" "Merge User -> Feature" jf-lcsr-mergeback)
-       ("m m" "Merge" jf-lcsr-merge)]))
+  (defun jf-lcsr-merge (source)
+    (interactive
+     (list
+      (completing-read
+       "Branch: "
+       (magit-list-branch-names))))
+    (magit-run-git-async
+     "merge"
+     `(,(concat "-m " (jf-lcsr-merge-message (magit-get-current-branch) source))) source))
+#+END_SRC
+***** Issues
+#+BEGIN_SRC emacs-lisp
+  (defun jf-lcsr-issue-new (id tag source)
+    (interactive
+     (list
+      (read-string "ID: ")
+      (read-string "Tag: ")
+      (let ((input
+             (completing-read
+              "Branch Off (default master): "
+              (mapcar (lambda (b) (jf-lcsr-branch-tag b))
+                      (jf-lcsr-base-branches))
+              nil nil nil nil "master")))
+        (if (string= input "master")
+            input
+          (jf-lcsr-find-tag input (jf-lcsr-base-branches))))))
+    (let ((base-branch (jf-lcsr-branch id tag))
+          (my-branch (jf-lcsr-branch id jf-lcsr-me)))
+      (magit-branch-create base-branch source)
+      (magit-checkout base-branch)
+      (magit-branch-create my-branch base-branch)
+      (magit-checkout my-branch)))
+#+END_SRC
+***** Tracking
+#+BEGIN_SRC emacs-lisp
+  (defvar jf-lcsr-dir (expand-file-name "lcsr" user-emacs-directory))
+  (defvar jf-lcsr-today-file (expand-file-name "today.org" "lcsr"))
+  (defvar jf-lcsr-next-file (expand-file-name "next.org" "lcsr"))
+  (defvar jf-lcsr-notes-file (expand-file-name "notes.org" "lcsr"))
+
+  (defun jf-lcsr-log-ensure ()
+    (unless (file-exists-p jf-lcsr-dir)
+      (make-directory jf-lcsr-dir))
+    (unless (file-exists-p jf-lcsr-today-file)
+      (with-temp-buffer (write-file jf-lcsr-today-file)))
+    (unless (file-exists-p jf-lcsr-next-file)
+      (with-temp-buffer (write-file jf-lcsr-next-file)))
+    (unless (file-exists-p jf-lcsr-notes-file)
+      (with-temp-buffer (write-file jf-lcsr-notes-file))))
+
+  (defun jf-lcsr-log-clear ()
+    (interactive)
+    (when (file-exists-p jf-lcsr-today-file)
+      (delete-file jf-lcsr-today-file))
+    (when (file-exists-p jf-lcsr-next-file)
+      (delete-file jf-lcsr-next-file))
+    (when (file-exists-p jf-lcsr-notes-file)
+      (delete-file jf-lcsr-notes-file)))
+
+  (defun jf-lcsr-log (file msg)
+    (append-to-file (concat "- " msg "\n") nil file))
+
+  (defun jf-lcsr-log-now (msg)
+    (interactive "sToday: ")
+    (jf-lcsr-log-ensure)
+    (jf-lcsr-log jf-lcsr-today-file msg))
+
+  (defun jf-lcsr-log-next (msg)
+    (interactive "sNext: ")
+    (jf-lcsr-log-ensure)
+    (jf-lcsr-log jf-lcsr-next-file msg))
+
+  (defun jf-lcsr-log-note (msg)
+    (interactive "sNote: ")
+    (jf-lcsr-log-ensure)
+    (jf-lcsr-log jf-lcsr-notes-file msg))
+
+  (defun jf-lcsr-log-report-file ()
+    (expand-file-name (concat "report-" (format-time-string "%Y-%m-%d") ".org")
+                      "lcsr"))
+
+  (defun jf-lcsr-hours ()
+    (concat
+     "\n"
+     (pcase (format-time-string "%a")
+       ("Mon" "In:  09:00\nOut: 13:00\nIn:  15:00\nOut: 19:00")
+       ("Tue" "In:  09:00\nOut: 19:00")
+       ("Wed" "In:  15:00\nOut: 19:00")
+       ("Thu" "In:  09:00\nOut: 19:00")
+       ("Fri" "In:  11:30\nOut: 15:00\nIn:  17:00\nOut: 19:00"))
+     "\n\n"))
+
+  (defun jf-lcsr-log-read-file (file)
+    (with-temp-buffer
+      (insert-file-contents-literally file)
+      (buffer-string)))
+
+  (defun jf-lcsr-log-buffer ()
+    (let ((buffer (create-file-buffer (jf-lcsr-log-report-file))))
+      (with-current-buffer buffer
+        (org-mode)
+        (org-time-stamp-inactive)
+        (insert
+         (concat
+          (jf-lcsr-hours)
+          "* What I did today:\n"
+          (jf-lcsr-log-read-file jf-lcsr-today-file)
+          "\n* What I will do next:\n"
+          (jf-lcsr-log-read-file jf-lcsr-next-file)
+          ;; TODO: Only include notes if there are any
+          "\n* Notes:\n"
+          (jf-lcsr-log-read-file jf-lcsr-notes-file)))
+        (pop-to-buffer buffer))))
+
+  (defun jf-lcsr-log-finalize ()
+    (interactive)
+    (jf-lcsr-log-buffer)
+    ;(jf-lcsr-log-clear)
+    )
+#+END_SRC
+***** Transient
+#+BEGIN_SRC emacs-lisp
+  (define-transient-command jf-lcsr-issue-dispatch ()
+    ["Issues"
+     ("i" "Create Issue" jf-lcsr-issue-new)]
+    ["Navigation"
+     ("b b" "Checkout Feature <-> User" jf-lcsr-checkout-toggle)
+     ("b i" "Checkout ID" jf-lcsr-checkout-id)
+     ("b t" "Checkout Tag" jf-lcsr-checkout-tag)]
+    ["Commits"
+     ("c" "Commit with Tag" jf-lcsr-commit)
+     ("m t" "Merge Feature <-> User" jf-lcsr-merge-toggle)
+     ("m b" "Merge User -> Feature" jf-lcsr-mergeback)
+     ("m m" "Merge" jf-lcsr-merge)]))
 #+END_SRC
 *** Forge
 Magic GitHub facilities for git forges such as GitHub and GitLab!
@@ -1384,8 +1548,8 @@ Older regions are more whitey and newer regions are more blacky.
 #+END_SRC
 ** Projects
 *** Projectile
-Projectile provides project-level features like
-make shortcuts and file switching
+Projectile provides project-level features like make shortcuts and
+file switching
 #+BEGIN_SRC emacs-lisp
   (use-package projectile
     :defer t
@@ -1449,7 +1613,6 @@ Mode for editing markdown.
   (use-package markdown-mode
     :mode "\\.md\\'")
 #+END_SRC
-
 *** Python
 **** Jedi
 Auto completion in python-mode.
@@ -1460,7 +1623,7 @@ Auto completion in python-mode.
 **** ob-ipython
 Allows embedding ipython in org mode files. See the [[https://github.com/gregsexton/ob-ipython][github]] for tips, tricks, and tutorials.
 #+BEGIN_SRC emacs-lisp
-(use-package ob-ipython)
+  (use-package ob-ipython)
 #+END_SRC
 *** Javascript
 rjsx-mode includes a javascript mode with support for react jsx files.
@@ -1485,7 +1648,6 @@ Company integration is done with company-web.
   (use-package company-web
     :company web-mode)
 #+END_SRC
-
 *** JSON
 Mode for editing JSON files.
 #+BEGIN_SRC emacs-lisp
@@ -1498,14 +1660,12 @@ Mode for editing YAML files.
   (use-package yaml-mode
     :mode "\\.yaml\\'")
 #+END_SRC
-
 *** Arch PKGBUILD
 Mode for editing PKGBUILD files.
 #+BEGIN_SRC emacs-lisp
   (use-package pkgbuild-mode
     :mode ".*PKGBUILD\\'")
 #+END_SRC
-
 *** LaTeX
 **** AUCTeX
 AUCTeX is a major mode for editing TeX.
@@ -1637,7 +1797,7 @@ for all of the IDE like features.
 The std:: java build system
 #+BEGIN_SRC emacs-lisp
   (use-package gradle-mode
-    :commands gradle-mode
+    :commands (gradle-mode)
     :preface
     (defun jf-gradle-run-main ()
       (gradle-execute "run"))
@@ -1660,11 +1820,11 @@ Support for editing GLSL shader files.
     :company glsl-mode)
 #+END_SRC
 *** Hoon
-Urbit programming language.
+Mode for the Urbit programming language.
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'hoon-mode
-            (lambda ()
-              (define-key hoon-mode-map (kbd "C-c r") 'hoon-eval-region-in-urb)
-              (define-key hoon-mode-map (kbd "C-c b") 'hoon-eval-buffer-in-urb))
-              (jf-indent-spaces 2))
+  ;;(add-hook 'hoon-mode
+  ;;          (lambda ()
+  ;;            (define-key hoon-mode-map (kbd "C-c r") 'hoon-eval-region-in-urb)
+  ;;            (define-key hoon-mode-map (kbd "C-c b") 'hoon-eval-buffer-in-urb))
+  ;;            (jf-indent-spaces 2))
 #+END_SRC

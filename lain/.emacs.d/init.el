@@ -1,7 +1,7 @@
 ;; Needs to be commented or else it will be added back
 ; (package-initialize)
-
-(defvar jf-config-file (expand-file-name "config.org" user-emacs-directory))
+(defvar jf-config-org-file (expand-file-name "config.org" user-emacs-directory))
+(defvar jf-config-file (expand-file-name "config.el" user-emacs-directory))
 (defvar jf-init-file (expand-file-name "init.el" user-emacs-directory))
 (defvar jf-load-path (expand-file-name "lisp/" user-emacs-directory))
 (defvar jf-gc-threshold 20000000) ; 20MB up from 800KB
@@ -15,7 +15,7 @@
 
 ;; Don't garbage collect during init
 (jf-inhibit-gc)
-(org-babel-load-file jf-config-file)
+(org-babel-load-file jf-config-org-file)
 (jf-resume-gc)
 
 (message "-> Initialized in %s with %d GCs."
