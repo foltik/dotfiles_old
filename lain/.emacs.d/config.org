@@ -116,7 +116,7 @@ We first use it to set up a leader key, =SPC=, and prefixes; like =\= in Vim.
       :prefix "SPC"
       :non-normal-prefix "M-SPC")
 
-    (defun jf-create-wk-prefix (desc)
+    (defun jf-wk-prefix (desc)
       "Helper for creating which-key prefix descriptions.
   Bind to a key with general to make which-key show DESC
   as the prefix's description"
@@ -133,10 +133,10 @@ We first use it to set up a leader key, =SPC=, and prefixes; like =\= in Vim.
                     (name (cdr def)))
                 `((general-create-definer ,(intern (concat "jf-" name "-def"))
                     :keymaps 'override
-                    :states '(normal insert emacs)
+                    :states '(normal visual insert emacs)
                     :prefix ,(concat "SPC " key)
                     :non-normal-prefix ,(concat "M-SPC " key))
-                  (jf-leader-def ,key ',(jf-create-wk-prefix name)))))
+                  (jf-leader-def ,key ',(jf-wk-prefix name)))))
             definitions)))
 
     (jf-create-definers
@@ -569,7 +569,7 @@ Define and bind functions for managing files, including emacs config files.
 
   (jf-files-def
     "r"  #'revert-buffer
-    "e"  (jf-create-wk-prefix "emacs files")
+    "e"  (jf-wk-prefix "emacs files")
     "ec" #'jf-edit-config
     "ei" #'jf-edit-init
     "er" #'jf-reload-config
@@ -768,6 +768,7 @@ Keep org-mode up to date straight from the cow's utters.
 If the manual is not on your computer, it's [[https://orgmode.org/manual/][here]].
 #+BEGIN_SRC emacs-lisp
   (use-package org
+    :defer t
     :pin org
     :mode ("\\.org\\'" . org-mode)
     :hook ((org-mode . org-indent-mode)
@@ -983,7 +984,7 @@ Define some useful helper functions related to indentation used later in the con
   (setq-default tab-width 4)
 
   ;; Default to 4 spaces
-  (add-hook 'prog-mode-hook #'jf-indent-4-spaces)
+  ;(add-hook 'prog-mode-hook #'jf-indent-4-spaces)
 
   ;; Define functions for every level of indent that might need hooking
   (cl-macrolet
@@ -1237,9 +1238,9 @@ Keybinds [[https://github.com/emacs-evil/evil-magit][here]]
       "B" 'magit-blame-reverse
       "s" 'magit-status)
     (:keymaps 'magit-status-mode-map
-      "i" 'jf-lcsr-issue-dispatch)
+              "i" 'jf-lcsr-issue-dispatch)
     :config
-    (jf-lcsr-setup))
+    (jf-lcsr-issue-init))
 #+END_SRC
 It's *evil* magic git!
 #+BEGIN_SRC emacs-lisp
@@ -1429,29 +1430,29 @@ for dealing with this.
 #+END_SRC
 ***** Tracking
 #+BEGIN_SRC emacs-lisp
-  (defvar jf-lcsr-dir (expand-file-name "lcsr" user-emacs-directory))
-  (defvar jf-lcsr-today-file (expand-file-name "today.org" "lcsr"))
-  (defvar jf-lcsr-next-file (expand-file-name "next.org" "lcsr"))
-  (defvar jf-lcsr-notes-file (expand-file-name "notes.org" "lcsr"))
+  (defun jf-lcsr-log-file (&optional file)
+    (if file
+        (expand-file-name (concat (file-name-as-directory "lcsr") file) user-emacs-directory)
+      (expand-file-name (file-name-as-directory "lcsr") user-emacs-directory)))
+
+  (defvar jf-lcsr-dir (jf-lcsr-log-file))
+  (defvar jf-lcsr-today-file (jf-lcsr-log-file "today.org"))
+  (defvar jf-lcsr-next-file (jf-lcsr-log-file "next.org"))
+  (defvar jf-lcsr-notes-file (jf-lcsr-log-file "notes.org"))
+  (defvar jf-lcsr-files (list jf-lcsr-today-file jf-lcsr-next-file jf-lcsr-notes-file))
 
   (defun jf-lcsr-log-ensure ()
     (unless (file-exists-p jf-lcsr-dir)
       (make-directory jf-lcsr-dir))
-    (unless (file-exists-p jf-lcsr-today-file)
-      (with-temp-buffer (write-file jf-lcsr-today-file)))
-    (unless (file-exists-p jf-lcsr-next-file)
-      (with-temp-buffer (write-file jf-lcsr-next-file)))
-    (unless (file-exists-p jf-lcsr-notes-file)
-      (with-temp-buffer (write-file jf-lcsr-notes-file))))
+    (dolist (f jf-lcsr-files)
+      (unless (file-exists-p f)
+        (with-temp-buffer (write-file f)))))
 
   (defun jf-lcsr-log-clear ()
     (interactive)
-    (when (file-exists-p jf-lcsr-today-file)
-      (delete-file jf-lcsr-today-file))
-    (when (file-exists-p jf-lcsr-next-file)
-      (delete-file jf-lcsr-next-file))
-    (when (file-exists-p jf-lcsr-notes-file)
-      (delete-file jf-lcsr-notes-file)))
+    (dolist (f jf-lcsr-files)
+      (when (file-exists-p f)
+        (delete-file f))))
 
   (defun jf-lcsr-log (file msg)
     (append-to-file (concat "- " msg "\n") nil file))
@@ -1475,16 +1476,35 @@ for dealing with this.
     (expand-file-name (concat "report-" (format-time-string "%Y-%m-%d") ".org")
                       "lcsr"))
 
+  (defun jf-lcsr-format-hours (times)
+    (seq-reduce
+     (lambda (acc p)
+       (concat
+        acc
+        (let ((start (car p))
+              (end (cadr p)))
+          (format "[%02d:%02d]--[%02d:%02d] => %02d:%02d\n"
+                  (/ start 100) (mod start 100)
+                  (/ end 100)   (mod end 100)
+                  (if (> (mod start 100) 0)
+                      (- (- (/ end 100) (/ start 100)) 1)
+                    (- (/ end 100) (/ start 100)))
+                  (if (> (mod start 100) 0)
+                      30
+                    0)))))
+     times
+     ""))
+
   (defun jf-lcsr-hours ()
     (concat
      "\n"
      (pcase (format-time-string "%a")
-       ("Mon" "In:  09:00\nOut: 13:00\nIn:  15:00\nOut: 19:00")
-       ("Tue" "In:  09:00\nOut: 19:00")
-       ("Wed" "In:  15:00\nOut: 19:00")
-       ("Thu" "In:  09:00\nOut: 19:00")
-       ("Fri" "In:  11:30\nOut: 15:00\nIn:  17:00\nOut: 19:00"))
-     "\n\n"))
+       ("Mon" (jf-lcsr-format-hours '((0900 1300) (1500 1900))))
+       ("Tue" (jf-lcsr-format-hours '((0900 1900))))
+       ("Wed" (jf-lcsr-format-hours '((1500 1900))))
+       ("Thu" (jf-lcsr-format-hours '((0900 1900))))
+       ("Fri" (jf-lcsr-format-hours '((1130 1500) (1700 1900)))))
+     "\n"))
 
   (defun jf-lcsr-log-read-file (file)
     (with-temp-buffer
@@ -1503,9 +1523,12 @@ for dealing with this.
           (jf-lcsr-log-read-file jf-lcsr-today-file)
           "\n* What I will do next:\n"
           (jf-lcsr-log-read-file jf-lcsr-next-file)
-          ;; TODO: Only include notes if there are any
-          "\n* Notes:\n"
-          (jf-lcsr-log-read-file jf-lcsr-notes-file)))
+          (unless (with-temp-buffer
+                    (insert-file-contents-literally jf-lcsr-notes-file)
+                    (eq (buffer-size) 0))
+            (concat
+             "\n* Notes:\n"
+             (jf-lcsr-log-read-file jf-lcsr-notes-file)))))
         (pop-to-buffer buffer))))
 
   (defun jf-lcsr-log-finalize ()
@@ -1516,18 +1539,19 @@ for dealing with this.
 #+END_SRC
 ***** Transient
 #+BEGIN_SRC emacs-lisp
-  (define-transient-command jf-lcsr-issue-dispatch ()
-    ["Issues"
-     ("i" "Create Issue" jf-lcsr-issue-new)]
-    ["Navigation"
-     ("b b" "Checkout Feature <-> User" jf-lcsr-checkout-toggle)
-     ("b i" "Checkout ID" jf-lcsr-checkout-id)
-     ("b t" "Checkout Tag" jf-lcsr-checkout-tag)]
-    ["Commits"
-     ("c" "Commit with Tag" jf-lcsr-commit)
-     ("m t" "Merge Feature <-> User" jf-lcsr-merge-toggle)
-     ("m b" "Merge User -> Feature" jf-lcsr-mergeback)
-     ("m m" "Merge" jf-lcsr-merge)]))
+  (defun jf-lcsr-issue-init ()
+    (define-transient-command jf-lcsr-issue-dispatch ()
+      ["Issues"
+       ("i" "Create Issue" jf-lcsr-issue-new)]
+      ["Navigation"
+       ("b b" "Checkout Feature <-> User" jf-lcsr-checkout-toggle)
+       ("b i" "Checkout ID" jf-lcsr-checkout-id)
+       ("b t" "Checkout Tag" jf-lcsr-checkout-tag)]
+      ["Commits"
+       ("c" "Commit with Tag" jf-lcsr-commit)
+       ("m t" "Merge Feature <-> User" jf-lcsr-merge-toggle)
+       ("m b" "Merge User -> Feature" jf-lcsr-mergeback)
+       ("m m" "Merge" jf-lcsr-merge)]))
 #+END_SRC
 *** Forge
 Magic GitHub facilities for git forges such as GitHub and GitLab!
@@ -1573,8 +1597,14 @@ file switching
                 (projectile-add-known-project (projectile-project-root))))))))
 
     :custom
+    (projectile-enable-caching t)
     (projectile-completion-system 'ivy)
-    (projectile-project-search-path (list jf-projects-path)))
+    (projectile-project-search-path (list jf-projects-path))
+    (projectile-globally-ignored-file-suffixes
+        '("#" "~" ".swp" ".o" ".so" ".a" ".elc" ".pyc" ".jar"))
+    (projectile-globally-ignored-directories
+        '(".git" "node_modules" "__pycache__"))
+    (projectile-globally-ignored-files '("TAGS" "tags" ".DS_Store")))
 #+END_SRC
 *** Projectile ibuffer
 Groups buffers in ibuffer by their project root directory.
@@ -1623,15 +1653,139 @@ Auto completion in python-mode.
 **** ob-ipython
 Allows embedding ipython in org mode files. See the [[https://github.com/gregsexton/ob-ipython][github]] for tips, tricks, and tutorials.
 #+BEGIN_SRC emacs-lisp
-  (use-package ob-ipython)
+  (use-package ob-ipython
+    :after org)
 #+END_SRC
 *** Javascript
+**** rjsx-mode
 rjsx-mode includes a javascript mode with support for react jsx files.
 #+BEGIN_SRC emacs-lisp
-  (use-package rjsx-mode
-    :pin melpa
-    :mode "\\.js\\'"
-    :interpreter "node")
+    (use-package rjsx-mode
+      :pin melpa
+      :mode "\\.js\\'"
+      :interpreter "node"
+      :config
+      (setq-default js2-basic-offset 4)
+      :general
+      (jf-major-def
+        :keymaps 'rjsx-mode-map
+        "r"  (jf-wk-prefix "refactor")
+        "h"  (jf-wk-prefix "documentation")
+        "g"  (jf-wk-prefix "goto")
+        "z"  (jf-wk-prefix "folding")
+        "w"  'js2-mode-toggle-warnings-and-errors
+        "zc" 'js2-mode-hide-element
+        "zo" 'js2-mode-show-element
+        "zr" 'js2-mode-show-all
+        "ze" 'js2-mode-toggle-element
+        "zF" 'js2-mode-toggle-hide-functions
+        "zC" 'js2-mode-toggle-hide-comments))
+#+END_SRC
+**** tern
+Tern is like a language server for javascript.
+#+BEGIN_SRC emacs-lisp
+  (use-package tern
+    :hook (js2-mode . tern-mode)
+    :general
+    (jf-major-def
+      :keymaps 'tern-mode-keymap
+      "rr"  (jf-wk-prefix "rename")
+      "rrv" #'tern-rename-variable
+      "hd"  #'tern-get-docs
+      "ht"  #'tern-get-type
+      "g/"  #'tern-find-definition-by-name
+      "C-g" #'tern-pop-find-definition))
+
+  (use-package company-tern
+    :company rjsx-mode
+    :custom
+    (company-tern-meta-as-single-line t))
+#+END_SRC
+**** js2-refactor
+js2-refactor adds all kinds of source code transformation shortcuts for javascript.
+#+BEGIN_SRC emacs-lisp
+  (use-package js2-refactor
+    :defer t
+    :preface
+    (defun jf-load-js2-refactor ()
+      (require 'js2-refactor))
+    :hook (js2-mode . jf-load-js2-refactor)
+    :general
+    (jf-major-def
+      :keymaps 'js2-mode-map
+      "r3"  (jf-wk-prefix "ternary")
+      "r3i" #'js2r-ternary-to-if
+
+      "ra"  (jf-wk-prefix "add/args")
+      "rag" #'js2r-add-to-globals-annotation
+      "rao" #'js2r-arguments-to-object
+
+      "rb"  (jf-wk-prefix "barf")
+      "rba" #'js2r-forward-barf
+
+      "rc"  (jf-wk-prefix "contract")
+      "rca" #'js2r-contract-array
+      "rco" #'js2r-contract-object
+      "rcu" #'js2r-contract-function
+
+      "re"  (jf-wk-prefix "expand/extract")
+      "rea" #'js2r-expand-array
+      "ref" #'js2r-extract-function
+      "rem" #'js2r-extract-method
+      "reo" #'js2r-expand-object
+      "reu" #'js2r-expand-function
+      "rev" #'js2r-extract-var
+
+      "ri"  (jf-wk-prefix "inline/inject/introduce")
+      "rig" #'js2r-inject-global-in-iife
+      "rip" #'js2r-introduce-parameter
+      "riv" #'js2r-inline-var
+
+      "rl"  (jf-wk-prefix "localize/log")
+      "rlp" #'js2r-localize-parameter
+      "rlt" #'js2r-log-this
+
+
+      "rs"  (jf-wk-prefix "split/slurp")
+      "rsl" #'js2r-forward-slurp
+      "rss" #'js2r-split-string
+      "rsv" #'js2r-split-var-declaration
+
+      "rt"  (jf-wk-prefix "toggle")
+      "rtf" #'js2r-toggle-function-expression-and-declaration
+
+      "ru"  (jf-wk-prefix "unwrap")
+      "ruw" #'js2r-unwrap
+
+      "rv"  (jf-wk-prefix "var")
+      "rvt" #'js2r-var-to-this
+
+      "rw"  (jf-wk-prefix "wrap")
+      "rwi" #'js2r-wrap-buffer-in-iife
+      "rwl" #'js2r-wrap-in-for-loop
+
+      "x"   (jf-wk-prefix "text")
+      "xm"  (jf-wk-prefix "move")
+      "xmj" #'js2r-move-line-down
+      "xmk" #'js2r-move-line-up
+      "k"   #'js2r-kill))
+#+END_SRC
+**** js-doc
+js2-doc adds helpers for reading and writing documentation for javascript code.
+#+BEGIN_SRC emacs-lisp
+  (use-package js-doc
+    :defer t
+    :preface
+    (defun jf-load-js-doc ()
+      (require 'js-doc))
+    :hook (js2-mode . jf-load-js-doc)
+    :general
+    (jf-major-def
+      :keymaps 'js2-mode-map
+      "rdb" #'js-doc-insert-file-doc
+      "rdf" #'js-doc-insert-function-doc
+      "rdt" #'js-doc-insert-tag
+      "rdh" #'js-doc-describe-tag))
 #+END_SRC
 *** Web
 Web-mode should give everything you need for a web-dev major mode.
@@ -1698,7 +1852,8 @@ cdlatex adds better TeX-specific template expansions and other niceties.
 #+END_SRC
 ***** Commands
 #+BEGIN_SRC emacs-lisp
-  (setq jf-cdlatex-commands nil)
+  (setq jf-cdlatex-commands
+        '(("ch" "Insert n choose r" "\\left( \\begin{array}{c} {?} \\\\ {} \\end{array} \\right)" cdlatex-position-cursor nil nil t)))
 #+END_SRC
 ***** Math Symbols
 #+BEGIN_SRC emacs-lisp
@@ -1708,11 +1863,12 @@ cdlatex adds better TeX-specific template expansions and other niceties.
 ***** Setup
 #+BEGIN_SRC emacs-lisp
   (use-package cdlatex
-    :hook (LaTeX-mode . cdlatex-mode)
     :preface
     (defun jf-larger-latex ()
       (interactive)
       (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.5)))
+    :hook ((LaTeX-mode . cdlatex-mode)
+           (org-cdlatex-mode . jf-larger-latex))
     :custom
     (cdlatex-env-alist jf-cdlatex-envs)
     (cdlatex-command-alist jf-cdlatex-commands)
