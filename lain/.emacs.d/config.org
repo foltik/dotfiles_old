@@ -311,6 +311,13 @@ Flash highlight on evil motions for better visual feedback of what's happening.
     (evil-goggles-mode)
     (evil-goggles-use-diff-faces))
 #+END_SRC
+*** evil-matchit
+#+BEGIN_SRC emacs-lisp
+  (use-package evil-matchit
+    :after evil
+    :config
+    (global-evil-matchit-mode 1))
+#+END_SRC
 * Emacs
 ** Defaults
 *** Add to Load Path
@@ -1260,13 +1267,13 @@ for dealing with this.
 ***** Predicates
 #+BEGIN_SRC emacs-lisp
   (defun jf-lcsr-branch-base-p (branch)
-    (string-match "^\\(origin/\\)?issue/[0-9]\\{2,4\\}/[A-Za-z-]+$" branch))
+    (string-match "^\\(origin/\\)?issue/[0-9]\\{1,4\\}/[A-Za-z-]+$" branch))
 
   (defun jf-lcsr-branch-user-p (branch)
-    (string-match "^\\(origin/\\)?issue/[0-9]\\{2,4\\}/[a-z]\\{2,3\\}[0-9]\\{1,5\\}$" branch))
+    (string-match "^\\(origin/\\)?issue/[0-9]\\{1,4\\}/[a-z]\\{2,3\\}[0-9]\\{1,5\\}$" branch))
 
   (defun jf-lcsr-branch-origin-p (branch)
-    (string-match "^origin/issue/[0-9]\\{2,4\\}/[A-Za-z-]+$" branch))
+    (string-match "^origin/issue/[0-9]\\{1,4\\}/[A-Za-z-]+$" branch))
 
   (defun jf-lcsr-branch-my-p (branch)
     (and (jf-lcsr-branch-user-p branch) (string= jf-lcsr-me (jf-lcsr-branch-tag branch))))
@@ -1660,26 +1667,26 @@ Allows embedding ipython in org mode files. See the [[https://github.com/gregsex
 **** rjsx-mode
 rjsx-mode includes a javascript mode with support for react jsx files.
 #+BEGIN_SRC emacs-lisp
-    (use-package rjsx-mode
-      :pin melpa
-      :mode "\\.js\\'"
-      :interpreter "node"
-      :config
-      (setq-default js2-basic-offset 4)
-      :general
-      (jf-major-def
-        :keymaps 'rjsx-mode-map
-        "r"  (jf-wk-prefix "refactor")
-        "h"  (jf-wk-prefix "documentation")
-        "g"  (jf-wk-prefix "goto")
-        "z"  (jf-wk-prefix "folding")
-        "w"  'js2-mode-toggle-warnings-and-errors
-        "zc" 'js2-mode-hide-element
-        "zo" 'js2-mode-show-element
-        "zr" 'js2-mode-show-all
-        "ze" 'js2-mode-toggle-element
-        "zF" 'js2-mode-toggle-hide-functions
-        "zC" 'js2-mode-toggle-hide-comments))
+  (use-package rjsx-mode
+    :pin melpa
+    :mode "\\.js\\'"
+    :interpreter "node"
+    :config
+    (setq-default js2-basic-offset 4)
+    :general
+    (jf-major-def
+      :keymaps 'rjsx-mode-map
+      "r"  (jf-wk-prefix "refactor")
+      "h"  (jf-wk-prefix "documentation")
+      "g"  (jf-wk-prefix "goto")
+      "z"  (jf-wk-prefix "folding")
+      "w"  'js2-mode-toggle-warnings-and-errors
+      "zc" 'js2-mode-hide-element
+      "zo" 'js2-mode-show-element
+      "zr" 'js2-mode-show-all
+      "ze" 'js2-mode-toggle-element
+      "zF" 'js2-mode-toggle-hide-functions
+      "zC" 'js2-mode-toggle-hide-comments))
 #+END_SRC
 **** tern
 Tern is like a language server for javascript.
@@ -1983,4 +1990,10 @@ Mode for the Urbit programming language.
   ;;            (define-key hoon-mode-map (kbd "C-c r") 'hoon-eval-region-in-urb)
   ;;            (define-key hoon-mode-map (kbd "C-c b") 'hoon-eval-buffer-in-urb))
   ;;            (jf-indent-spaces 2))
+#+END_SRC
+*** Haskell
+**** haskell-mode
+#+BEGIN_SRC emacs-lisp
+  (use-package haskell-mode
+    :mode "\\.hs\\'")
 #+END_SRC
